@@ -49,6 +49,14 @@ class BulkDataDownloader
         return $this->readMarker($file->type, 'imported') == $file->updatedAt;
     }
 
+    /**
+     * Date (côté Scryfall) de la dernière version importée avec succès, ou null si jamais importée.
+     */
+    public function lastImportedVersion(string $type): ?\DateTimeImmutable
+    {
+        return $this->readMarker($type, 'imported');
+    }
+
     public function markImported(BulkFile $file): void
     {
         $this->writeMarker($file->type, 'imported', $file->updatedAt);

@@ -9,7 +9,7 @@ use Doctrine\DBAL\Connection;
  * en priorité une mythique, puis une rare, la plus jouée en Commander (meilleur rang EDHREC).
  *
  * La requête parcourt toutes les impressions (quelques secondes) : elle est lancée après les imports,
- * jamais à l'affichage.
+ * jamais à l'affichage. Les couvertures choisies à la main dans l'admin (cover_locked) sont conservées.
  */
 class SetCoverUpdater
 {
@@ -38,6 +38,7 @@ class SetCoverUpdater
                   AND COALESCE(JSON_VALUE(p.image_uris, '$.art_crop'), JSON_VALUE(p.image_uris, '$[0].art_crop')) IS NOT NULL
             ) cover ON cover.set_id = s.id AND cover.rn = 1
             SET s.cover_art_uri = cover.art, s.cover_card_name = LEFT(cover.name, 255)
+            WHERE s.cover_locked = 0
             SQL);
     }
 }

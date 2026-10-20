@@ -163,6 +163,14 @@ class Deck
         return array_values($this->cards->filter(static fn (DeckCard $c) => \in_array($c->getZone(), $zones, true))->toArray());
     }
 
+    /**
+     * Nombre de cartes jouées (commandant, deck principal et réserve).
+     */
+    public function getCardCount(): int
+    {
+        return $this->countIn(DeckZone::Commander, DeckZone::Main, DeckZone::Side);
+    }
+
     public function countIn(DeckZone ...$zones): int
     {
         return array_sum(array_map(static fn (DeckCard $c) => $c->getQuantity(), $this->getCardsIn(...$zones)));
@@ -194,5 +202,10 @@ class Deck
     {
         $this->cards->removeElement($deckCard);
         $this->touch();
+    }
+
+    public function __toString(): string
+    {
+        return $this->name;
     }
 }

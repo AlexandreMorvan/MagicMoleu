@@ -57,6 +57,23 @@ bin/console debug:scheduler   # prochaines exécutions
 Les identifiants Scryfall servent de clés primaires (BINARY(16)) ; l'import écrit via DBAL par lots
 (`INSERT … ON DUPLICATE KEY UPDATE`), il est donc idempotent.
 
+## Back-office
+
+Interface EasyAdmin sur `/admin`, réservée au rôle `ROLE_ADMIN` : tableau de bord, utilisateurs (rôles),
+decks, succès débloqués, notifications (envoi d'un message à un utilisateur), cartes (lecture seule) et éditions
+(choix manuel de l'illustration de couverture, protégée du calcul automatique).
+
+```bash
+bin/console app:user:promote <email-ou-pseudo>            # donner le rôle admin
+bin/console app:user:promote <email-ou-pseudo> --revoke   # le retirer
+```
+
+## Succès et notifications
+
+Le catalogue des succès est l'enum `App\Enum\Achievement` (textes, rareté, icône, condition).
+`AchievementChecker` débloque les succès mérités et crée une notification (cloche du menu + toast) ;
+il est appelé à l'inscription, à chaque modification de deck et une fois par jour et par session (anniversaires).
+
 ## Tests
 
 ```bash

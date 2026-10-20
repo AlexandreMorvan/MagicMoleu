@@ -58,6 +58,12 @@ class CardControllerTest extends WebTestCase
         self::assertSelectorTextContains('h2', 'Lightning Bolt');
         self::assertSelectorTextContains('ul', 'Modern');
         self::assertSelectorExists('a[aria-current="true"]');
+
+        // Le fragment de la modale est mis en cache par le navigateur
+        $response = $this->client->getResponse();
+        self::assertStringContainsString('max-age=600', $response->headers->get('Cache-Control'));
+        self::assertStringContainsString('private', $response->headers->get('Cache-Control'));
+        self::assertContains('Turbo-Frame', $response->getVary());
     }
 
     public function testShowFullPageWithSelectedPrinting(): void

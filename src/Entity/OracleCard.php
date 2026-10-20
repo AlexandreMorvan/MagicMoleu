@@ -351,4 +351,9 @@ class OracleCard
     {
         return $this->localizations->findFirst(static fn (int $k, CardLocalization $l) => $l->getLang() === $lang);
     }
+
+    public function __toString(): string
+    {
+        return $this->name;
+    }
 }

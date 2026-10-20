@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Achievement\AchievementChecker;
 use App\Deck\DeckExporter;
 use App\Deck\DeckImporter;
 use App\Entity\Deck;
@@ -26,6 +27,7 @@ class DeckController extends AbstractController
     public function __construct(
         private readonly DeckRepository $decks,
         private readonly EntityManagerInterface $em,
+        private readonly AchievementChecker $achievements,
     ) {
     }
 
@@ -49,6 +51,7 @@ class DeckController extends AbstractController
             $this->importList($form, $deck, $importer);
             $this->em->persist($deck);
             $this->em->flush();
+            $this->achievements->check($user);
 
             return $this->redirectToRoute('app_deck_edit', ['id' => $deck->getId()]);
         }
@@ -88,6 +91,7 @@ class DeckController extends AbstractController
             $this->importList($form, $deck, $importer);
             $deck->touch();
             $this->em->flush();
+            $this->achievements->check($deck->getOwner());
             $this->addFlash('success', 'Deck mis à jour.');
 
             return $this->redirectToRoute('app_deck_edit', ['id' => $deck->getId()]);

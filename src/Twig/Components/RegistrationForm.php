@@ -2,6 +2,7 @@
 
 namespace App\Twig\Components;
 
+use App\Achievement\AchievementChecker;
 use App\Entity\User;
 use App\Form\RegistrationFormType;
 use Doctrine\ORM\EntityManagerInterface;
@@ -30,7 +31,7 @@ class RegistrationForm extends AbstractController
     }
 
     #[LiveAction]
-    public function save(EntityManagerInterface $entityManager, UserPasswordHasherInterface $passwordHasher, Security $security): Response
+    public function save(EntityManagerInterface $entityManager, UserPasswordHasherInterface $passwordHasher, Security $security, AchievementChecker $achievements): Response
     {
         $this->submitForm();
 
@@ -40,6 +41,7 @@ class RegistrationForm extends AbstractController
 
         $entityManager->persist($user);
         $entityManager->flush();
+        $achievements->check($user);
 
         $security->login($user, 'form_login', 'main');
         $this->addFlash('success', \sprintf('Bienvenue %s, ton compte est créé !', $user->getUsername()));

@@ -163,3 +163,16 @@
     from { opacity: 0.4; }
     to { opacity: 1; }
 }
+
+@layer components {
+    .toast {
+        opacity: 0;
+        transform: translateY(1rem) scale(0.97);
+        transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    .toast-visible {
+        opacity: 1;
+        transform: none;
+    }
+}

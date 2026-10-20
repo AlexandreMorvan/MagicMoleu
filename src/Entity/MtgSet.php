@@ -47,7 +47,16 @@ class MtgSet
 
         #[ORM\Column(length: 255, nullable: true)]
         private ?string $coverCardName = null,
+
+        /** Couverture choisie à la main dans l'admin : le calcul automatique ne la remplace plus. */
+        #[ORM\Column(options: ['default' => false])]
+        private bool $coverLocked = false,
     ) {
+    }
+
+    public function __toString(): string
+    {
+        return \sprintf('%s (%s)', $this->name, strtoupper($this->code));
     }
 
     public function getId(): Uuid
@@ -103,5 +112,31 @@ class MtgSet
     public function getCoverCardName(): ?string
     {
         return $this->coverCardName;
+    }
+
+    public function setCoverArtUri(?string $coverArtUri): static
+    {
+        $this->coverArtUri = $coverArtUri;
+
+        return $this;
+    }
+
+    public function setCoverCardName(?string $coverCardName): static
+    {
+        $this->coverCardName = $coverCardName;
+
+        return $this;
+    }
+
+    public function isCoverLocked(): bool
+    {
+        return $this->coverLocked;
+    }
+
+    public function setCoverLocked(bool $coverLocked): static
+    {
+        $this->coverLocked = $coverLocked;
+
+        return $this;
     }
 }

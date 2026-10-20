@@ -40,6 +40,10 @@
 
                 <div class="ml-auto flex items-center gap-2">
                     {% if app.user %}
+                        {% if is_granted('ROLE_ADMIN') %}
+                            <a href="{{ path('admin') }}" class="nav-link hidden sm:inline-block" data-turbo="false">Admin</a>
+                        {% endif %}
+                        <twig:NotificationBell />
                         <a href="{{ path('app_profile') }}" class="nav-link {{ route == 'app_profile' ? 'nav-link-active' }} flex items-center gap-2">
                             <span class="grid h-7 w-7 place-items-center rounded-full bg-ink-700 text-xs text-white">{{ app.user.username|first|upper }}</span>
                             <span class="hidden sm:inline">{{ app.user.username }}</span>
@@ -61,7 +65,9 @@
             </div>
         </header>
 
-        <main class="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 sm:py-12">
+        {# Pas de préchargement au survol dans le contenu : les grilles de cartes déclencheraient une requête par carte survolée.
+           Il reste actif sur le menu, où il accélère la navigation. #}
+        <main class="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 sm:py-12" data-turbo-prefetch="false">
             {% for type, messages in app.flashes %}
                 {% for message in messages %}
                     <div class="panel mb-6 border-l-4 px-4 py-3 {{ type == 'error' ? 'border-l-mana-r' : 'border-l-neon-cyan' }}">{{ message }}</div>
@@ -70,6 +76,8 @@
 
             {% block body %}{% endblock %}
         </main>
+
+        {% if app.user %}<twig:NotificationToasts />{% endif %}
 
         {# Modale de fiche carte : les liens ciblant la frame « card_modal » s'y affichent #}
         <dialog class="card-modal m-auto w-[min(64rem,calc(100vw-2rem))] max-h-[calc(100vh-2rem)] overflow-y-auto rounded-2xl border border-ink-700 bg-ink-850 p-0 text-ink-100 shadow-2xl shadow-black/60"

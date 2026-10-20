@@ -2,6 +2,7 @@
 
 namespace App\Twig\Components;
 
+use App\Achievement\AchievementChecker;
 use App\Deck\DeckBuilder;
 use App\Entity\Deck;
 use App\Entity\DeckCard;
@@ -18,6 +19,7 @@ use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveAction;
 use Symfony\UX\LiveComponent\Attribute\LiveArg;
 use Symfony\UX\LiveComponent\Attribute\LiveProp;
+use Symfony\UX\LiveComponent\ComponentToolsTrait;
 use Symfony\UX\LiveComponent\DefaultActionTrait;
 
 /**
@@ -26,6 +28,7 @@ use Symfony\UX\LiveComponent\DefaultActionTrait;
 #[AsLiveComponent]
 class DeckEditor extends AbstractController
 {
+    use ComponentToolsTrait;
     use DefaultActionTrait;
 
     /** Identifiant du deck : non modifiable côté client (signé par LiveComponent). */
@@ -42,6 +45,7 @@ class DeckEditor extends AbstractController
         private readonly OracleCardRepository $cards,
         private readonly DeckBuilder $builder,
         private readonly EntityManagerInterface $em,
+        private readonly AchievementChecker $achievements,
     ) {
     }
 
@@ -85,7 +89,7 @@ class DeckEditor extends AbstractController
         }
 
         $this->builder->add($this->getDeck(), $card, DeckZone::tryFrom($zone) ?? DeckZone::Main);
-        $this->em->flush();
+        $this->save();
     }
 
     #[LiveAction]
@@ -98,14 +102,14 @@ class DeckEditor extends AbstractController
             $deckCard->setQuantity($deckCard->getQuantity() + $delta);
             $this->getDeck()->touch();
         }
-        $this->em->flush();
+        $this->save();
     }
 
     #[LiveAction]
     public function remove(#[LiveArg] int $deckCardId): void
     {
         $this->getDeck()->removeCard($this->findDeckCard($deckCardId));
-        $this->em->flush();
+        $this->save();
     }
 
     /**
@@ -125,7 +129,18 @@ class DeckEditor extends AbstractController
         // Le retrait doit être écrit avant l'ajout : (deck, carte, zone) est unique
         $this->em->flush();
         $this->builder->add($deck, $deckCard->getOracleCard(), $target, $deckCard->getQuantity(), $deckCard->getPrinting());
+        $this->save();
+    }
+
+    /**
+     * Enregistre, vérifie les succès et prévient la cloche et les toasts s'il y a du nouveau.
+     */
+    private function save(): void
+    {
         $this->em->flush();
+        if ($this->achievements->check($this->getDeck()->getOwner())) {
+            $this->emit('notifications:refresh');
+        }
     }
 
     private function findDeckCard(int $id): DeckCard
