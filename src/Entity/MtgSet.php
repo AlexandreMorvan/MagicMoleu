@@ -40,6 +40,13 @@ class MtgSet
 
         #[ORM\Column(options: ['default' => false])]
         private bool $digital = false,
+
+        /** Illustration de la carte emblématique de l'édition, calculée par {@see \App\Scryfall\SetCoverUpdater}. */
+        #[ORM\Column(length: 255, nullable: true)]
+        private ?string $coverArtUri = null,
+
+        #[ORM\Column(length: 255, nullable: true)]
+        private ?string $coverCardName = null,
     ) {
     }
 
@@ -86,5 +93,15 @@ class MtgSet
     public function isDigital(): bool
     {
         return $this->digital;
+    }
+
+    public function getCoverArtUri(): ?string
+    {
+        return $this->coverArtUri;
+    }
+
+    public function getCoverCardName(): ?string
+    {
+        return $this->coverCardName;
     }
 }

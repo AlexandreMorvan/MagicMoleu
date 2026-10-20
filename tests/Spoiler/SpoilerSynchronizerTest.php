@@ -6,6 +6,7 @@ use App\Entity\CardPrinting;
 use App\Scryfall\BulkUpserter;
 use App\Scryfall\CardImporter;
 use App\Scryfall\ScryfallClient;
+use App\Scryfall\SetCoverUpdater;
 use App\Scryfall\SetImporter;
 use App\Scryfall\SpoilerSynchronizer;
 use Doctrine\ORM\EntityManagerInterface;
@@ -87,7 +88,12 @@ class SpoilerSynchronizerTest extends KernelTestCase
         $client = new ScryfallClient($http, new RateLimiterFactory(['id' => 'test', 'policy' => 'no_limit'], new InMemoryStorage()));
         $container = self::getContainer();
 
-        return new SpoilerSynchronizer($client, new SetImporter($client, $container->get(BulkUpserter::class)), $container->get(CardImporter::class));
+        return new SpoilerSynchronizer(
+            $client,
+            new SetImporter($client, $container->get(BulkUpserter::class)),
+            $container->get(CardImporter::class),
+            $container->get(SetCoverUpdater::class),
+        );
     }
 
     private function printing(string $id): CardPrinting

@@ -5,6 +5,7 @@ namespace App\Command;
 use App\Scryfall\BulkDataDownloader;
 use App\Scryfall\CardImporter;
 use App\Scryfall\JsonlReader;
+use App\Scryfall\SetCoverUpdater;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Attribute\Option;
 use Symfony\Component\Console\Command\Command;
@@ -17,6 +18,7 @@ class ImportCardsCommand
     public function __construct(
         private readonly BulkDataDownloader $downloader,
         private readonly CardImporter $importer,
+        private readonly SetCoverUpdater $coverUpdater,
         private readonly LockFactory $lockFactory,
     ) {
     }
@@ -54,6 +56,7 @@ class ImportCardsCommand
             $io->newLine(2);
 
             $this->downloader->markImported($file);
+            $this->coverUpdater->update();
             $io->success(\sprintf('%d impressions importées.', $count));
 
             return Command::SUCCESS;

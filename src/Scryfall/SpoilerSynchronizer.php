@@ -17,6 +17,7 @@ class SpoilerSynchronizer
         private readonly ScryfallClient $client,
         private readonly SetImporter $setImporter,
         private readonly CardImporter $cardImporter,
+        private readonly SetCoverUpdater $coverUpdater,
     ) {
     }
 
@@ -30,6 +31,9 @@ class SpoilerSynchronizer
 
         $since = ($today ?? new \DateTimeImmutable('today'))->modify(\sprintf('-%d days', self::WINDOW_DAYS));
         $cards = $this->cardImporter->import($this->search(\sprintf('date>=%s', $since->format('Y-m-d'))));
+        if ($cards > 0) {
+            $this->coverUpdater->update();
+        }
 
         return ['sets' => $sets, 'cards' => $cards];
     }
