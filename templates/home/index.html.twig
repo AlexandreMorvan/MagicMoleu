@@ -30,18 +30,37 @@
         {% endfor %}
     </section>
 
+    {% if latest_spoilers is not empty %}
+        <section class="mt-16">
+            <div class="flex items-baseline justify-between gap-4">
+                <h2 class="text-2xl uppercase">Derniers spoilers</h2>
+                <a href="{{ path('app_spoilers') }}" class="text-sm font-semibold text-neon-cyan hover:underline">Tous les spoilers →</a>
+            </div>
+            <ul class="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+                {% for printing in latest_spoilers %}
+                    <li>
+                        <a href="{{ path('app_card_show', {id: printing.oracleCard.id, impression: printing.id}) }}" data-turbo-frame="card_modal" class="group block">
+                            <div class="card-tile aspect-[63/88]">
+                                {% if printing.imageUri %}<img src="{{ printing.imageUri }}" alt="{{ printing.oracleCard.name }}" loading="lazy" class="h-full w-full object-cover">{% endif %}
+                            </div>
+                            <p class="mt-2 truncate text-sm font-semibold text-white group-hover:text-neon-cyan">{{ printing.oracleCard.name }}</p>
+                            <p class="text-xs text-ink-500">{{ printing.set.name }}</p>
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </section>
+    {% endif %}
+
     {% if latest_sets is not empty %}
         <section class="mt-16">
-            <h2 class="text-2xl uppercase">Dernières éditions</h2>
+            <div class="flex items-baseline justify-between gap-4">
+                <h2 class="text-2xl uppercase">Dernières éditions</h2>
+                <a href="{{ path('app_set_index') }}" class="text-sm font-semibold text-neon-cyan hover:underline">Toutes les éditions →</a>
+            </div>
             <ul class="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
                 {% for set in latest_sets %}
-                    <li class="panel group flex flex-col items-center p-5 text-center transition hover:border-neon-violet/60 hover:shadow-glow">
-                        {% if set.iconSvgUri %}
-                            <img src="{{ set.iconSvgUri }}" alt="" class="h-10 w-10 invert transition group-hover:scale-110" loading="lazy">
-                        {% endif %}
-                        <p class="mt-3 line-clamp-2 text-sm font-semibold text-white">{{ set.name }}</p>
-                        <p class="mt-1 text-xs uppercase tracking-widest text-ink-500">{{ set.code }} · {{ set.releasedAt|date('m/Y') }}</p>
-                    </li>
+                    <li>{{ include('set/_tile.html.twig', {set: set}) }}</li>
                 {% endfor %}
             </ul>
         </section>

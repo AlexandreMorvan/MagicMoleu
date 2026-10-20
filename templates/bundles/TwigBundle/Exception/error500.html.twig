@@ -1,0 +1,13 @@
+{{ include('@Twig/Exception/_error_card.html.twig', {
+    code: 500,
+    name: 'Brûlure de mana',
+    cost: '{X}{R}{R}',
+    type: 'Rituel — Arcane',
+    rules: 'Le serveur perd X points de vie, où X est la quantité de mana inutilisée dans sa réserve. Nos mages réparent le sort.',
+    flavor: '« Je jure que la formule était correcte quand je l\'ai lancée. »',
+    stats: null,
+    frame: 'from-[#c4462f] to-[#5e1a12]',
+    glow: 'from-orange-400/60 via-red-700/30 to-transparent',
+    headline: 'Le sort a raté',
+    message: 'Une erreur inattendue s\'est produite de notre côté. Réessaie dans quelques instants.',
+}) }}

@@ -1,0 +1,13 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Spoilers{% endblock %}
+
+{% block body %}
+    <div class="mb-8">
+        <p class="badge border-neon-cyan/50 text-neon-cyan">Mis à jour toutes les heures</p>
+        <h1 class="mt-3 text-4xl uppercase">Spoilers</h1>
+        <p class="mt-1 text-ink-300">Les dernières cartes dévoilées des éditions récentes et à venir.</p>
+    </div>
+
+    <twig:SpoilerGallery />
+{% endblock %}

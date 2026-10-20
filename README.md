@@ -26,14 +26,25 @@ symfony serve -d
 
 ## Import Scryfall
 
-| Commande | Source | Fréquence conseillée |
+| Commande | Source | Planification (UTC) |
 |---|---|---|
-| `app:scryfall:import-sets` | `GET /sets` | quotidienne |
-| `app:scryfall:import-cards [--force]` | bulk `default-cards` (JSONL gzip) | quotidienne |
-| `app:scryfall:import-localized --lang=fr [--force]` | bulk `all-cards` | hebdomadaire |
+| `app:scryfall:sync-spoilers` | `GET /sets` + recherche des cartes des 30 derniers jours et à venir | toutes les heures (h+05) |
+| `app:scryfall:import-cards [--force]` | bulk `default-cards` (JSONL gzip) | tous les jours à 10 h 15 |
+| `app:scryfall:import-localized --lang=fr [--force]` | bulk `all-cards` | le lundi à 11 h 30 |
+| `app:scryfall:import-sets` | `GET /sets` | (inclus dans `sync-spoilers`) |
 
 Les fichiers bulk sont mis en cache dans `var/scryfall/` et ne sont retéléchargés / réimportés que si Scryfall
 en publie une nouvelle version (`--force` pour réimporter quand même). Un verrou empêche deux imports simultanés.
+
+### Planification
+
+Les tâches sont déclarées dans `src/Schedule.php` (Symfony Scheduler) et exécutées par un worker Messenger,
+à garder actif (systemd, Supervisor…) :
+
+```bash
+bin/console messenger:consume scheduler_default
+bin/console debug:scheduler   # prochaines exécutions
+```
 
 ## Modèle de données
 

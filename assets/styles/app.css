@@ -132,3 +132,34 @@
         @apply grid h-6 w-6 place-items-center rounded text-ink-300 transition hover:bg-ink-700 hover:text-white;
     }
 }
+
+@layer components {
+    /* Pages d'erreur : légère lévitation de la carte et étincelles dans l'illustration */
+    .error-card {
+        animation: error-float 6s ease-in-out infinite;
+    }
+
+    .error-sparks {
+        background-image:
+            radial-gradient(1px 1px at 20% 30%, rgb(255 255 255 / 0.8), transparent),
+            radial-gradient(1px 1px at 70% 20%, rgb(255 255 255 / 0.6), transparent),
+            radial-gradient(1.5px 1.5px at 40% 75%, rgb(255 255 255 / 0.7), transparent),
+            radial-gradient(1px 1px at 85% 65%, rgb(255 255 255 / 0.5), transparent),
+            radial-gradient(1.5px 1.5px at 10% 85%, rgb(255 255 255 / 0.6), transparent);
+        animation: error-twinkle 3s ease-in-out infinite alternate;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .error-card, .error-sparks { animation: none; }
+    }
+}
+
+@keyframes error-float {
+    0%, 100% { transform: translateY(0) rotate(-1.5deg); }
+    50% { transform: translateY(-10px) rotate(1deg); }
+}
+
+@keyframes error-twinkle {
+    from { opacity: 0.4; }
+    to { opacity: 1; }
+}

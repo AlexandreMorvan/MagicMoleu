@@ -85,7 +85,7 @@ class CardControllerTest extends WebTestCase
         $crawler = $this->client->request('GET', '/');
         $links = $crawler->filter('header nav a.nav-link')->each(fn ($a) => $a->attr('href'));
 
-        self::assertSame(['/', '/cartes', '/decks', '/spoilers', '/connexion'], $links);
+        self::assertSame(['/', '/cartes', '/editions', '/decks', '/spoilers', '/connexion'], $links);
         foreach ($links as $href) {
             $this->client->request('GET', $href);
             self::assertResponseIsSuccessful($href);

@@ -22,8 +22,9 @@ class BulkUpserter
      * @param list<string>                     $uuidColumns      colonnes dont la valeur est un UUID
      * @param array<string, string>|null       $updates          expressions SQL par colonne pour la clause UPDATE ;
      *                                                           par défaut toutes les colonnes prennent la nouvelle valeur
+     * @param array<string, string>            $updateOverrides  expressions qui remplacent celles par défaut pour certaines colonnes
      */
-    public function upsert(string $table, array $rows, array $uuidColumns = [], ?array $updates = null): void
+    public function upsert(string $table, array $rows, array $uuidColumns = [], ?array $updates = null, array $updateOverrides = []): void
     {
         if (!$rows) {
             return;
@@ -37,6 +38,7 @@ class BulkUpserter
         $rowSql = '('.implode(', ', $placeholders).')';
 
         $updates ??= array_combine($columns, array_map(static fn (string $c) => "VALUES(`$c`)", $columns));
+        $updates = array_merge($updates, $updateOverrides);
         $updateSql = implode(', ', array_map(
             static fn (string $column, string $expression) => "`$column` = $expression",
             array_keys($updates),

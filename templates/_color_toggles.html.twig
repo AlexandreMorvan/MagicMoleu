@@ -1,0 +1,14 @@
+{# Boutons de couleur (cases à cocher) liés à une propriété live. Variables : choices (Color ou 'C'), model, size #}
+{% set size = size|default('h-9 w-9') %}
+<div class="flex flex-wrap gap-2" role="group" aria-label="Couleurs">
+    {% for color in choices %}
+        {% set code = color.value ?? color %}
+        {% set label = color.label ?? 'Incolore' %}
+        <label class="cursor-pointer" title="{{ label }}">
+            <input type="checkbox" class="peer sr-only" data-model="{{ model }}" value="{{ code }}">
+            <span class="grid {{ size }} place-items-center rounded-full border border-ink-700 bg-ink-900 opacity-50 grayscale transition hover:opacity-80 peer-checked:border-neon-violet peer-checked:opacity-100 peer-checked:shadow-glow peer-checked:grayscale-0 peer-focus-visible:outline-2 peer-focus-visible:outline-neon-cyan">
+                <img src="https://svgs.scryfall.io/card-symbols/{{ code }}.svg" alt="{{ label }}" class="h-[65%] w-[65%]">
+            </span>
+        </label>
+    {% endfor %}
+</div>

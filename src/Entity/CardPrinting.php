@@ -16,6 +16,7 @@ use Symfony\Component\Uid\Uuid;
 #[ORM\UniqueConstraint(name: 'uniq_printing_set_number_lang', columns: ['set_id', 'collector_number', 'lang'])]
 #[ORM\Index(name: 'idx_printing_released_at', columns: ['released_at'])]
 #[ORM\Index(name: 'idx_printing_rarity', columns: ['rarity'])]
+#[ORM\Index(name: 'idx_printing_revealed_at', columns: ['revealed_at'])]
 class CardPrinting
 {
     #[ORM\Id]
@@ -83,6 +84,22 @@ class CardPrinting
     #[ORM\Column(length: 255)]
     private string $scryfallUri = '';
 
+    /**
+     * Date de révélation : celle de l'aperçu officiel si Scryfall la connaît,
+     * sinon le jour où l'import a vu la carte pour la première fois.
+     */
+    #[ORM\Column(type: Types::DATE_IMMUTABLE)]
+    private \DateTimeImmutable $revealedAt;
+
+    #[ORM\Column(type: Types::DATE_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $previewedAt = null;
+
+    #[ORM\Column(length: 100, nullable: true)]
+    private ?string $previewSource = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $previewSourceUri = null;
+
     public function __construct(Uuid $id, OracleCard $oracleCard, MtgSet $set, string $collectorNumber, string $lang, Rarity $rarity, \DateTimeImmutable $releasedAt)
     {
         $this->id = $id;
@@ -92,6 +109,7 @@ class CardPrinting
         $this->lang = $lang;
         $this->rarity = $rarity;
         $this->releasedAt = $releasedAt;
+        $this->revealedAt = min($releasedAt, new \DateTimeImmutable('today'));
     }
 
     public function getId(): Uuid
@@ -209,5 +227,25 @@ class CardPrinting
     public function getScryfallUri(): string
     {
         return $this->scryfallUri;
+    }
+
+    public function getRevealedAt(): \DateTimeImmutable
+    {
+        return $this->revealedAt;
+    }
+
+    public function getPreviewedAt(): ?\DateTimeImmutable
+    {
+        return $this->previewedAt;
+    }
+
+    public function getPreviewSource(): ?string
+    {
+        return $this->previewSource;
+    }
+
+    public function getPreviewSourceUri(): ?string
+    {
+        return $this->previewSourceUri;
     }
 }

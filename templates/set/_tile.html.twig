@@ -1,0 +1,12 @@
+{# Vignette d'édition cliquable. Variables : set, count (optionnel) #}
+{% set upcoming = set.releasedAt and set.releasedAt > date('today') %}
+<a href="{{ path('app_set_show', {code: set.code}) }}" class="panel group flex h-full flex-col items-center p-5 text-center transition hover:border-neon-violet/60 hover:shadow-glow">
+    {% if set.iconSvgUri %}
+        <img src="{{ set.iconSvgUri }}" alt="" class="h-10 w-10 invert transition group-hover:scale-110" loading="lazy">
+    {% endif %}
+    <p class="mt-3 line-clamp-2 text-sm font-semibold text-white group-hover:text-neon-cyan">{{ set.name }}</p>
+    <p class="mt-1 text-xs uppercase tracking-widest {{ upcoming ? 'text-neon-cyan' : 'text-ink-500' }}">
+        {{ set.code }}{% if set.releasedAt %} · {{ set.releasedAt|date('m/Y') }}{% endif %}
+    </p>
+    {% if count is defined and count %}<p class="mt-1 text-xs text-ink-500">{{ count }} cartes</p>{% endif %}
+</a>

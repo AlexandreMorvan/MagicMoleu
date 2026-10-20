@@ -107,6 +107,11 @@ final class CardMapper
                 'frame' => $card['frame'] ?? '',
                 'border_color' => $card['border_color'] ?? '',
                 'scryfall_uri' => $card['scryfall_uri'] ?? '',
+                // Écrit seulement à l'insertion, puis remplacé par la date d'aperçu si elle apparaît (voir CardImporter)
+                'revealed_at' => $card['preview']['previewed_at'] ?? date('Y-m-d'),
+                'previewed_at' => $card['preview']['previewed_at'] ?? null,
+                'preview_source' => isset($card['preview']['source']) ? mb_substr($card['preview']['source'], 0, 100) : null,
+                'preview_source_uri' => isset($card['preview']['source_uri']) ? mb_substr($card['preview']['source_uri'], 0, 255) : null,
             ],
             legalities: $this->mapLegalities($oracleId, $card['legalities'] ?? []),
         );

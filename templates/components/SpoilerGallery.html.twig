@@ -1,0 +1,90 @@
+<div {{ attributes }}>
+    {# ---------- Éditions ---------- #}
+    {% if sets is not empty %}
+        <div class="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:flex-wrap sm:px-0">
+            {% for s in sets %}
+                {% set active = this.set == s.code %}
+                {% set upcoming = s.releasedAt and s.releasedAt > date('today') %}
+                <button type="button"
+                        class="panel flex shrink-0 items-center gap-3 px-4 py-3 text-left transition {{ active ? 'border-neon-violet shadow-glow' : 'hover:border-ink-700' }}"
+                        {% if active %}aria-pressed="true"{% else %}aria-pressed="false"{% endif %}
+                        data-action="live#action" data-live-action-param="selectSet" data-live-code-param="{{ s.code }}">
+                    {% if s.iconSvgUri %}<img src="{{ s.iconSvgUri }}" alt="" class="h-7 w-7 invert">{% endif %}
+                    <span>
+                        <span class="block max-w-48 truncate text-sm font-semibold text-white">{{ s.name }}</span>
+                        <span class="block text-xs {{ upcoming ? 'text-neon-cyan' : 'text-ink-500' }}">
+                            {{ upcoming ? 'Sortie le ' ~ s.releasedAt|format_date('medium', locale: 'fr') : 'Sortie' }} · {{ s.cards }} cartes
+                        </span>
+                    </span>
+                </button>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    {# ---------- Filtres ---------- #}
+    <div class="mt-5 flex flex-wrap items-center gap-x-6 gap-y-3">
+        {{ include('_color_toggles.html.twig', {choices: colorChoices, model: 'colors', size: 'h-8 w-8'}) }}
+        <div class="flex flex-wrap gap-3" role="group" aria-label="Rareté">
+            {% for rarity in rarityChoices %}
+                <label class="flex items-center gap-2 text-sm text-ink-100">
+                    <input type="checkbox" class="h-4 w-4 accent-neon-violet" data-model="rarities" value="{{ rarity.value }}">
+                    <span class="h-2 w-2 rounded-full rarity-{{ rarity.value }}"></span>{{ rarity.label }}
+                </label>
+            {% endfor %}
+        </div>
+        <span data-loading class="h-4 w-4 animate-spin rounded-full border-2 border-neon-violet border-t-transparent" hidden></span>
+    </div>
+
+    {# ---------- Cartes par jour de révélation ---------- #}
+    <div data-loading="addClass(opacity-50)" class="mt-8 transition-opacity">
+        {% set today = 'now'|date('Y-m-d') %}
+        {% set yesterday = '-1 day'|date('Y-m-d') %}
+        {% for day, printings in this.spoilersByDay %}
+            <section class="mb-10">
+                <h2 class="sticky top-16 z-10 -mx-1 mb-4 flex items-baseline gap-3 bg-ink-950/85 px-1 py-2 text-xl uppercase backdrop-blur">
+                    {{ day == today ? 'Aujourd\'hui' : (day == yesterday ? 'Hier' : day|format_date('full', locale: 'fr')|capitalize) }}
+                </h2>
+                <ul class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6">
+                    {% for printing in printings %}
+                        {% set card = printing.oracleCard %}
+                        <li id="spoiler-{{ printing.id }}">
+                            <a href="{{ path('app_card_show', {id: card.id, impression: printing.id}) }}" data-turbo-frame="card_modal" class="group block focus-visible:outline-none">
+                                <div class="card-tile aspect-[63/88] group-focus-visible:shadow-glow-cyan">
+                                    {% if printing.imageUri %}
+                                        <img src="{{ printing.imageUri }}" alt="{{ card.name }}" loading="lazy" class="h-full w-full object-cover">
+                                    {% else %}
+                                        <div class="grid h-full place-items-center p-3 text-center font-display text-ink-300">{{ card.name }}</div>
+                                    {% endif %}
+                                    {% if day >= yesterday %}
+                                        <span class="badge absolute left-2 top-2 border-transparent bg-gradient-to-r from-neon-violet to-neon-fuchsia text-white shadow-glow">Nouveau</span>
+                                    {% endif %}
+                                </div>
+                                <p class="mt-2 truncate text-sm font-semibold text-white group-hover:text-neon-cyan">{{ card.name }}</p>
+                            </a>
+                            <p class="flex items-center gap-1.5 truncate text-xs text-ink-500">
+                                <span class="h-2 w-2 shrink-0 rounded-full rarity-{{ printing.rarity.value }}"></span>
+                                {{ printing.set.code|upper }}
+                                {% if printing.previewSource %}
+                                    ·
+                                    {% if printing.previewSourceUri %}
+                                        <a href="{{ printing.previewSourceUri }}" target="_blank" rel="noopener" class="truncate hover:text-neon-cyan">{{ printing.previewSource }}</a>
+                                    {% else %}
+                                        <span class="truncate">{{ printing.previewSource }}</span>
+                                    {% endif %}
+                                {% endif %}
+                            </p>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </section>
+        {% else %}
+            <div class="panel border-dashed p-12 text-center text-ink-300">Aucune carte révélée ne correspond à ces filtres.</div>
+        {% endfor %}
+
+        {% if this.hasMore %}
+            <div class="text-center">
+                <button type="button" class="btn btn-ghost" data-action="live#action" data-live-action-param="more">Voir plus de cartes</button>
+            </div>
+        {% endif %}
+    </div>
+</div>

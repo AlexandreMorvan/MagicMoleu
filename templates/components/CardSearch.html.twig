@@ -26,17 +26,7 @@
 
                 <fieldset>
                     <legend class="label">Couleurs</legend>
-                    <div class="flex flex-wrap gap-2">
-                        {% for color in colorChoices %}
-                            {% set code = color.value ?? color %}
-                            <label class="cursor-pointer" title="{{ color.label ?? 'Incolore' }}">
-                                <input type="checkbox" class="peer sr-only" data-model="colors" value="{{ code }}">
-                                <span class="grid h-9 w-9 place-items-center rounded-full border border-ink-700 bg-ink-900 opacity-50 grayscale transition hover:opacity-80 peer-checked:border-neon-violet peer-checked:opacity-100 peer-checked:shadow-glow peer-checked:grayscale-0 peer-focus-visible:outline-2 peer-focus-visible:outline-neon-cyan">
-                                    <img src="https://svgs.scryfall.io/card-symbols/{{ code }}.svg" alt="{{ color.label ?? 'Incolore' }}" class="h-6 w-6">
-                                </span>
-                            </label>
-                        {% endfor %}
-                    </div>
+                    {{ include('_color_toggles.html.twig', {choices: colorChoices, model: 'colors'}) }}
                     <select class="input mt-3" data-model="colorMode" aria-label="Mode de comparaison des couleurs">
                         <option value="include">Au moins ces couleurs</option>
                         <option value="exact">Exactement ces couleurs</option>
@@ -175,7 +165,7 @@
             {% else %}
                 <ul class="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
                     {% for card in result.cards %}
-                        <li><twig:CardTile :card="card" /></li>
+                        <li id="search-card-{{ card.id }}"><twig:CardTile :card="card" /></li>
                     {% endfor %}
                 </ul>
             {% endif %}

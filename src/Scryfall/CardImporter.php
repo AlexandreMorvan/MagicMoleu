@@ -90,7 +90,9 @@ class CardImporter
             $this->upserter->upsert('mtg_set', array_values($this->buffer['mtg_set']), ['id'], ['id' => '`id`']);
             $this->upserter->upsert('oracle_card', $this->buffer['oracle_card'], ['id', 'default_printing_id'], self::ORACLE_UPDATES);
             $this->upserter->upsert('card_face', $this->buffer['card_face'], ['oracle_card_id']);
-            $this->upserter->upsert('card_printing', $this->buffer['card_printing'], ['id', 'oracle_card_id', 'set_id']);
+            $this->upserter->upsert('card_printing', $this->buffer['card_printing'], ['id', 'oracle_card_id', 'set_id'], updateOverrides: [
+                'revealed_at' => 'COALESCE(VALUES(`previewed_at`), `revealed_at`)',
+            ]);
             $this->upserter->upsert('card_legality', $this->buffer['card_legality'], ['oracle_card_id']);
         });
 
