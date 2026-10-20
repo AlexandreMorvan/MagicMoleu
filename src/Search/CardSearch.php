@@ -36,6 +36,9 @@ class CardSearch
 
         // La jointure sur la traduction (filtrée sur une langue) ne produit qu'une ligne par carte
         $paginator = new Paginator($qb, fetchJoinCollection: false);
+        // Sans output walker, le comptage est un simple COUNT(DISTINCT o.id). Avec, Doctrine enveloppe la requête
+        // dans des tables dérivées où MariaDB n'optimise plus les EXISTS (≈ 11 s pour un filtre par édition).
+        $paginator->setUseOutputWalkers(false);
 
         return new CardSearchResult(iterator_to_array($paginator, false), \count($paginator), $page, $perPage);
     }
@@ -82,13 +85,13 @@ class CardSearch
             $sub = $this->cards->getEntityManager()->createQueryBuilder()
                 ->select('1')
                 ->from(CardPrinting::class, 'p')
-                ->join('p.set', 's')
                 ->where('p.oracleCard = o');
             if ($rarities) {
                 $sub->andWhere('p.rarity IN ('.$this->param($qb, $rarities).')');
             }
+            // Jointure sur l'édition uniquement si nécessaire : sans elle, le filtre de rareté reste dans l'index
             if ('' !== $set) {
-                $sub->andWhere('s.code = '.$this->param($qb, $set));
+                $sub->join('p.set', 's')->andWhere('s.code = '.$this->param($qb, $set));
             }
             $qb->andWhere($qb->expr()->exists($sub->getDQL()));
         }
