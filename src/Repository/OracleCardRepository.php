@@ -45,4 +45,27 @@ class OracleCardRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    /**
+     * Retrouve une carte d'après le nom écrit dans une liste de deck : nom complet (« Fire // Ice »),
+     * face principale (« Delver of Secrets ») ou nom français.
+     */
+    public function findOneByDeckListName(string $name): ?OracleCard
+    {
+        $escaped = addcslashes($name, '%_\\');
+
+        return $this->createQueryBuilder('o')
+            ->leftJoin('o.localizations', 'l', 'WITH', 'l.lang = :lang')
+            ->addSelect('CASE WHEN o.name = :name THEN 0 WHEN o.name LIKE :front THEN 1 ELSE 2 END AS HIDDEN relevance')
+            ->where('o.name = :name OR o.name LIKE :front OR l.printedName = :name')
+            ->andWhere('o.layout NOT IN (:excluded)')
+            ->setParameter('lang', 'fr')
+            ->setParameter('name', $name)
+            ->setParameter('front', $escaped.' // %')
+            ->setParameter('excluded', self::NON_GAME_LAYOUTS)
+            ->orderBy('relevance', 'ASC')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
 }

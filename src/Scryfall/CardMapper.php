@@ -72,6 +72,7 @@ final class CardMapper
                 'first_printed_at' => $releasedAt,
                 'image_uri' => null !== $imageRank ? ($mainImage['normal'] ?? null) : null,
                 'art_crop_uri' => null !== $imageRank ? ($mainImage['art_crop'] ?? null) : null,
+                'default_printing_id' => null !== $imageRank ? $card['id'] : null,
                 'image_rank' => $imageRank,
             ],
             faces: array_map(fn (array $face, int $position) => [

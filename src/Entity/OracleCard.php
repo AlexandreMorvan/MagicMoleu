@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Enum\CardCategory;
 use App\Enum\Color;
 use App\Repository\OracleCardRepository;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -91,6 +92,13 @@ class OracleCard
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $artCropUri = null;
+
+    /**
+     * Impression d'où vient l'image (utilisée par défaut dans les decks). Simple identifiant, sans clé étrangère :
+     * l'import écrit les cartes oracle avant leurs impressions.
+     */
+    #[ORM\Column(type: UuidType::NAME, nullable: true)]
+    private ?Uuid $defaultPrintingId = null;
 
     /** Rang de l'impression dont vient l'image, calculé par {@see \App\Scryfall\CardMapper}. */
     #[ORM\Column(nullable: true)]
@@ -239,6 +247,11 @@ class OracleCard
         return $this->imageUri;
     }
 
+    public function getDefaultPrintingId(): ?Uuid
+    {
+        return $this->defaultPrintingId;
+    }
+
     public function getArtCropUri(): ?string
     {
         return $this->artCropUri;
@@ -266,6 +279,72 @@ class OracleCard
     public function getLocalizations(): Collection
     {
         return $this->localizations;
+    }
+
+    /**
+     * Ligne de type de la face principale (« Creature — Human Wizard » pour Delver of Secrets).
+     */
+    public function getFrontTypeLine(): string
+    {
+        return explode(' // ', $this->typeLine)[0];
+    }
+
+    public function getCategory(): CardCategory
+    {
+        return CardCategory::fromTypeLine($this->getFrontTypeLine());
+    }
+
+    public function isLand(): bool
+    {
+        return CardCategory::Land === $this->getCategory();
+    }
+
+    public function isBasicLand(): bool
+    {
+        $type = $this->getFrontTypeLine();
+
+        return str_contains($type, 'Basic') && str_contains($type, 'Land');
+    }
+
+    /**
+     * Nombre maximal d'exemplaires dans un deck : celui du format, sauf si la carte en décide autrement.
+     * Null = illimité (terrains de base, « A deck can have any number of cards named… ») ;
+     * « A deck can have up to seven cards named… » donne 7.
+     */
+    public function getCopyLimit(int $formatLimit): ?int
+    {
+        if ($this->isBasicLand() || str_contains($this->oracleText ?? '', 'A deck can have any number of cards named')) {
+            return null;
+        }
+        if (preg_match('/A deck can have up to (\w+) cards named/', $this->oracleText ?? '', $m)) {
+            $words = ['two' => 2, 'three' => 3, 'four' => 4, 'five' => 5, 'six' => 6, 'seven' => 7, 'eight' => 8, 'nine' => 9, 'ten' => 10];
+
+            return $words[strtolower($m[1])] ?? (int) $m[1];
+        }
+
+        return $formatLimit;
+    }
+
+    public function canBeCommander(): bool
+    {
+        $type = $this->getFrontTypeLine();
+
+        return (str_contains($type, 'Legendary') && str_contains($type, 'Creature'))
+            || str_contains($this->oracleText ?? '', 'can be your commander');
+    }
+
+    public function hasKeyword(string $keyword): bool
+    {
+        return \in_array(mb_strtolower($keyword), array_map(mb_strtolower(...), $this->keywords), true);
+    }
+
+    /**
+     * Nom utilisé dans les listes de decks : la face principale pour une carte recto-verso,
+     * le nom complet pour une carte split (« Fire // Ice »).
+     */
+    public function getDeckListName(): string
+    {
+        return 'split' === $this->layout ? $this->name : explode(' // ', $this->name)[0];
     }
 
     public function getLocalization(string $lang): ?CardLocalization

@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Classes construites dynamiquement dans les templates */
+@source inline("bg-mana-{w,u,b,r,g}");
+
 @theme {
     --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
     --font-display: "Rajdhani", "Inter", ui-sans-serif, sans-serif;
@@ -121,5 +124,11 @@
     .card-modal::backdrop {
         background: rgb(5 6 10 / 0.8);
         backdrop-filter: blur(4px);
+    }
+}
+
+@layer components {
+    .deck-btn {
+        @apply grid h-6 w-6 place-items-center rounded text-ink-300 transition hover:bg-ink-700 hover:text-white;
     }
 }

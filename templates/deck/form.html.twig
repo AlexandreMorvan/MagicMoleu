@@ -1,0 +1,30 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ deck ? 'Paramètres du deck' : 'Nouveau deck' }}{% endblock %}
+
+{% block body %}
+    <div class="mx-auto max-w-2xl">
+        <h1 class="text-3xl uppercase">{{ deck ? 'Paramètres du deck' : 'Nouveau deck' }}</h1>
+
+        {{ form_start(form, {attr: {class: 'panel mt-8 p-6 sm:p-8', novalidate: 'novalidate'}}) }}
+            {{ form_row(form.name) }}
+            {{ form_row(form.format) }}
+            {{ form_row(form.description) }}
+            <div class="mb-5 flex items-center gap-2 text-sm text-ink-300">
+                {{ form_widget(form.public) }} {{ form_label(form.public, null, {label_attr: {class: 'normal-case tracking-normal text-sm font-sans font-normal text-ink-300 mb-0'}}) }}
+            </div>
+            {{ form_row(form.list) }}
+            <div class="flex flex-wrap gap-3">
+                <button type="submit" class="btn btn-primary">{{ deck ? 'Enregistrer' : 'Créer le deck' }}</button>
+                <a href="{{ deck ? path('app_deck_edit', {id: deck.id}) : path('app_deck_index') }}" class="btn btn-ghost">Annuler</a>
+            </div>
+        {{ form_end(form) }}
+
+        {% if deck %}
+            <form method="post" action="{{ path('app_deck_delete', {id: deck.id}) }}" class="mt-6 text-right" data-turbo-confirm="Supprimer définitivement ce deck ?">
+                <input type="hidden" name="_token" value="{{ csrf_token('delete-deck-' ~ deck.id) }}">
+                <button type="submit" class="text-sm font-semibold text-mana-r hover:underline">Supprimer ce deck</button>
+            </form>
+        {% endif %}
+    </div>
+{% endblock %}

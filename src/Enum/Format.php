@@ -29,6 +29,16 @@ enum Format: string
     case Predh = 'predh';
     case Future = 'future';
 
+    /**
+     * Formats proposés pour la construction de decks.
+     *
+     * @return list<self>
+     */
+    public static function deckFormats(): array
+    {
+        return [self::Standard, self::Commander, self::Pioneer, self::Modern, self::Legacy, self::Vintage, self::Pauper];
+    }
+
     public function label(): string
     {
         return match ($this) {

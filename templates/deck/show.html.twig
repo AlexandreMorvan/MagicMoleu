@@ -1,0 +1,23 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ deck.name }}{% endblock %}
+
+{% block body %}
+    {% set actions %}
+        <a href="{{ path('app_deck_export', {id: deck.id}) }}" class="btn btn-ghost" target="_blank" data-turbo="false">Exporter</a>
+        {% if is_granted('DECK_EDIT', deck) %}
+            <a href="{{ path('app_deck_edit', {id: deck.id}) }}" class="btn btn-primary">Modifier</a>
+        {% endif %}
+    {% endset %}
+    {{ include('deck/_header.html.twig') }}
+
+    <div class="grid gap-6 lg:grid-cols-[1fr_20rem]">
+        <div class="space-y-4">
+            {{ include('deck/_card_list.html.twig', {zones: deck.zones, editable: false}) }}
+            {% if deck.cards is empty %}
+                <div class="panel border-dashed p-10 text-center text-ink-300">Ce deck est vide.</div>
+            {% endif %}
+        </div>
+        <aside>{{ include('deck/_sidebar.html.twig') }}</aside>
+    </div>
+{% endblock %}

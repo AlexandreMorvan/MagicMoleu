@@ -34,6 +34,7 @@ class CardImporter
         // image_rank doit être mis à jour en dernier car MariaDB applique les affectations dans l'ordre.
         'image_uri' => 'IF(VALUES(`image_rank`) >= COALESCE(`image_rank`, -1), VALUES(`image_uri`), `image_uri`)',
         'art_crop_uri' => 'IF(VALUES(`image_rank`) >= COALESCE(`image_rank`, -1), VALUES(`art_crop_uri`), `art_crop_uri`)',
+        'default_printing_id' => 'IF(VALUES(`image_rank`) >= COALESCE(`image_rank`, -1), VALUES(`default_printing_id`), `default_printing_id`)',
         'image_rank' => 'IF(VALUES(`image_rank`) >= COALESCE(`image_rank`, -1), VALUES(`image_rank`), `image_rank`)',
     ];
 
@@ -87,7 +88,7 @@ class CardImporter
         $this->connection->transactional(function () {
             // Les sets ne sont créés ici que s'ils n'existent pas encore ; app:scryfall:import-sets les complète.
             $this->upserter->upsert('mtg_set', array_values($this->buffer['mtg_set']), ['id'], ['id' => '`id`']);
-            $this->upserter->upsert('oracle_card', $this->buffer['oracle_card'], ['id'], self::ORACLE_UPDATES);
+            $this->upserter->upsert('oracle_card', $this->buffer['oracle_card'], ['id', 'default_printing_id'], self::ORACLE_UPDATES);
             $this->upserter->upsert('card_face', $this->buffer['card_face'], ['oracle_card_id']);
             $this->upserter->upsert('card_printing', $this->buffer['card_printing'], ['id', 'oracle_card_id', 'set_id']);
             $this->upserter->upsert('card_legality', $this->buffer['card_legality'], ['oracle_card_id']);

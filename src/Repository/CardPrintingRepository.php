@@ -37,4 +37,38 @@ class CardPrintingRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    /**
+     * Impression utilisée par défaut pour une carte (celle de son image), à défaut la plus récente.
+     */
+    public function findDefaultFor(OracleCard $card): ?CardPrinting
+    {
+        if ($id = $card->getDefaultPrintingId()) {
+            $printing = $this->find($id);
+            if ($printing) {
+                return $printing;
+            }
+        }
+
+        return $this->createQueryBuilder('p')
+            ->where('p.oracleCard = :card')
+            ->setParameter('card', $card->getId(), UuidType::NAME)
+            ->orderBy('p.releasedAt', 'DESC')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    public function findOneBySetAndNumber(string $setCode, string $collectorNumber): ?CardPrinting
+    {
+        return $this->createQueryBuilder('p')
+            ->join('p.set', 's')
+            ->where('s.code = :code')
+            ->andWhere('p.collectorNumber = :number')
+            ->setParameter('code', mb_strtolower($setCode))
+            ->setParameter('number', $collectorNumber)
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
 }
