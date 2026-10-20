@@ -1,0 +1,29 @@
+<div {{ attributes.defaults({class: 'relative'}) }}>
+    {% set unread = this.unreadCount %}
+    <details class="group" data-controller="dropdown" data-action="click@window->dropdown#closeOutside keydown.esc@window->dropdown#close">
+        <summary class="relative grid h-9 w-9 cursor-pointer list-none place-items-center rounded-full text-ink-300 transition hover:bg-ink-800 hover:text-white" aria-label="Notifications{{ unread ? ' (' ~ unread ~ ' non lues)' }}">
+            <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M10 2a6 6 0 0 0-6 6v2.59l-1.7 1.7A1 1 0 0 0 3 14h14a1 1 0 0 0 .7-1.71L16 10.59V8a6 6 0 0 0-6-6Zm0 16a3 3 0 0 1-2.83-2h5.66A3 3 0 0 1 10 18Z"/></svg>
+            {% if unread %}
+                <span class="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-gradient-to-r from-neon-violet to-neon-fuchsia px-1 text-[0.6rem] font-bold text-white shadow-glow">{{ unread > 9 ? '9+' : unread }}</span>
+            {% endif %}
+        </summary>
+
+        <div class="panel absolute right-0 z-50 mt-2 w-80 overflow-hidden shadow-2xl shadow-black/60">
+            <div class="flex items-center justify-between border-b border-ink-800 px-4 py-3">
+                <p class="font-display text-sm font-bold uppercase tracking-widest text-white">Notifications</p>
+                {% if unread %}
+                    <button type="button" class="text-xs font-semibold text-neon-cyan hover:underline" data-action="live#action" data-live-action-param="markAllRead">Tout marquer comme lu</button>
+                {% endif %}
+            </div>
+            <ul class="max-h-96 divide-y divide-ink-800 overflow-y-auto">
+                {% for notification in this.latest %}
+                    <li>{{ include('notification/_item.html.twig') }}</li>
+                {% else %}
+                    <li class="px-4 py-6 text-center text-sm text-ink-500">Rien de neuf pour l'instant.</li>
+                {% endfor %}
+            </ul>
+            <a href="{{ path('app_notifications') }}" class="block border-t border-ink-800 px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-widest text-ink-300 hover:bg-ink-800 hover:text-white">Tout voir</a>
+        </div>
+    </details>
+
+</div>

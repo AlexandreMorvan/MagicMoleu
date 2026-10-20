@@ -1,0 +1,13 @@
+{{ include('@Twig/Exception/_error_card.html.twig', {
+    code: status_code,
+    name: 'Anomalie de la pile',
+    cost: '{3}',
+    type: 'Artefact',
+    rules: 'Quand cette carte arrive sur le champ de bataille, la requête en cours se résout de façon inattendue.',
+    flavor: '« ' ~ status_text ~ ' » — inscription relevée sur l\'artefact.',
+    stats: null,
+    frame: 'from-[#9aa3ad] to-[#3b4047]',
+    glow: 'from-neon-violet/50 via-ink-700/30 to-transparent',
+    headline: 'Quelque chose a résisté',
+    message: 'La requête n\'a pas pu aboutir (' ~ status_code ~ ' ' ~ status_text ~ ').',
+}) }}

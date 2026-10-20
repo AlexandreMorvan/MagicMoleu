@@ -1,0 +1,52 @@
+<div {{ attributes }}>
+    <div class="flex flex-wrap items-center gap-x-6 gap-y-3">
+        {{ include('_color_toggles.html.twig', {choices: colorChoices, model: 'colors', size: 'h-8 w-8'}) }}
+        <div class="flex flex-wrap gap-3" role="group" aria-label="Rareté">
+            {% for rarity in rarityChoices %}
+                <label class="flex items-center gap-2 text-sm text-ink-100">
+                    <input type="checkbox" class="h-4 w-4 accent-neon-violet" data-model="rarities" value="{{ rarity.value }}">
+                    <span class="h-2 w-2 rounded-full rarity-{{ rarity.value }}"></span>{{ rarity.label }}
+                </label>
+            {% endfor %}
+        </div>
+        <span data-loading class="h-4 w-4 animate-spin rounded-full border-2 border-neon-violet border-t-transparent" hidden></span>
+        <select class="input ml-auto w-auto py-1.5 text-sm" data-model="sort" aria-label="Trier par">
+            <option value="number">Numéro de collection</option>
+            <option value="name">Nom</option>
+            <option value="rarity">Rareté</option>
+        </select>
+    </div>
+
+    {% set cards = this.cards %}
+    <div data-loading="addClass(opacity-50)" class="mt-6 transition-opacity">
+        {% if cards is empty %}
+            <div class="panel border-dashed p-12 text-center text-ink-300">Aucune carte ne correspond à ces filtres.</div>
+        {% else %}
+            <ul class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6">
+                {% for printing in cards %}
+                    {% set card = printing.oracleCard %}
+                    <li id="set-card-{{ printing.id }}">
+                        <a href="{{ path('app_card_show', {id: card.id, impression: printing.id}) }}" data-turbo-frame="card_modal" class="group block focus-visible:outline-none">
+                            <div class="card-tile aspect-[63/88] group-focus-visible:shadow-glow-cyan">
+                                {% if printing.imageUri %}
+                                    <img src="{{ printing.imageUri }}" alt="{{ card.name }}" loading="lazy" class="h-full w-full object-cover">
+                                {% else %}
+                                    <div class="grid h-full place-items-center p-3 text-center font-display text-ink-300">{{ card.name }}</div>
+                                {% endif %}
+                            </div>
+                            <p class="mt-2 truncate text-sm font-semibold text-white group-hover:text-neon-cyan">{{ card.name }}</p>
+                        </a>
+                        <p class="flex items-center gap-1.5 text-xs text-ink-500">
+                            <span class="h-2 w-2 rounded-full rarity-{{ printing.rarity.value }}"></span>#{{ printing.collectorNumber }}
+                        </p>
+                    </li>
+                {% endfor %}
+            </ul>
+            {% if this.hasMore %}
+                <div class="mt-8 text-center">
+                    <button type="button" class="btn btn-ghost" data-action="live#action" data-live-action-param="more">Voir plus de cartes</button>
+                </div>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>

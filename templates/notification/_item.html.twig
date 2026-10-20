@@ -1,0 +1,11 @@
+{# Une notification dans une liste. Variable : notification #}
+{% set tag = notification.link ? 'a' : 'div' %}
+<{{ tag }} {% if notification.link %}href="{{ notification.link }}"{% endif %} class="flex gap-3 px-4 py-3 transition {{ notification.read ? '' : 'bg-neon-violet/10' }} {{ notification.link ? 'hover:bg-ink-800' }}">
+    {{ include('notification/_icon.html.twig') }}
+    <div class="min-w-0 flex-1">
+        <p class="text-sm font-semibold text-white">{{ notification.title }}</p>
+        <p class="text-sm text-ink-300">{{ notification.message }}</p>
+        <p class="mt-0.5 text-xs text-ink-500">{{ notification.createdAt|format_datetime('medium', 'short', locale: 'fr') }}</p>
+    </div>
+    {% if not notification.read %}<span class="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-neon-cyan" title="Non lue"></span>{% endif %}
+</{{ tag }}>

@@ -1,0 +1,178 @@
+@import "tailwindcss";
+
+/* Classes construites dynamiquement dans les templates */
+@source inline("bg-mana-{w,u,b,r,g}");
+
+@theme {
+    --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+    --font-display: "Rajdhani", "Inter", ui-sans-serif, sans-serif;
+
+    /* Fonds et surfaces */
+    --color-ink-950: #0b0d12;
+    --color-ink-900: #11141b;
+    --color-ink-850: #141821;
+    --color-ink-800: #1b2030;
+    --color-ink-700: #272e42;
+    --color-ink-500: #4a5470;
+    --color-ink-300: #8b93ab;
+    --color-ink-100: #d7dbe6;
+
+    /* Accents néon */
+    --color-neon-violet: #8b5cf6;
+    --color-neon-fuchsia: #d946ef;
+    --color-neon-cyan: #22d3ee;
+
+    /* Couleurs de mana */
+    --color-mana-w: #f4ecc6;
+    --color-mana-u: #3d8fd6;
+    --color-mana-b: #9b8ea6;
+    --color-mana-r: #e5484d;
+    --color-mana-g: #2fa86a;
+    --color-mana-c: #b7b2ad;
+
+    --shadow-glow: 0 0 0 1px rgb(139 92 246 / 0.5), 0 0 24px -4px rgb(139 92 246 / 0.55);
+    --shadow-glow-cyan: 0 0 0 1px rgb(34 211 238 / 0.5), 0 0 24px -4px rgb(34 211 238 / 0.5);
+}
+
+@layer base {
+    html {
+        color-scheme: dark;
+    }
+
+    body {
+        @apply min-h-screen bg-ink-950 font-sans text-ink-100 antialiased;
+        background-image:
+            radial-gradient(60rem 30rem at 85% -10%, rgb(139 92 246 / 0.12), transparent 70%),
+            radial-gradient(50rem 25rem at -10% 10%, rgb(34 211 238 / 0.08), transparent 70%);
+        background-attachment: fixed;
+    }
+
+    h1, h2, h3 {
+        @apply font-display font-bold tracking-wide text-white;
+    }
+
+    ::selection {
+        @apply bg-neon-violet/40 text-white;
+    }
+}
+
+@layer components {
+    .btn {
+        @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 font-display text-sm font-semibold uppercase tracking-widest transition duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neon-cyan disabled:cursor-not-allowed disabled:opacity-50;
+    }
+
+    .btn-primary {
+        @apply bg-gradient-to-r from-neon-violet to-neon-fuchsia text-white hover:shadow-glow;
+    }
+
+    .btn-ghost {
+        @apply border border-ink-700 text-ink-100 hover:border-neon-cyan hover:text-white hover:shadow-glow-cyan;
+    }
+
+    .panel {
+        @apply rounded-2xl border border-ink-800 bg-ink-850/80 backdrop-blur;
+    }
+
+    .input {
+        @apply block w-full rounded-lg border border-ink-700 bg-ink-900 px-3 py-2 text-ink-100 placeholder:text-ink-500 transition focus:border-neon-violet focus:shadow-glow focus:outline-none;
+    }
+
+    .input-error {
+        @apply border-mana-r focus:border-mana-r;
+    }
+
+    .label {
+        @apply mb-1 block font-display text-xs font-semibold uppercase tracking-widest text-ink-300;
+    }
+
+    .form-error {
+        @apply mt-1 text-sm text-mana-r;
+    }
+
+    .nav-link {
+        @apply rounded-md px-3 py-2 font-display text-sm font-semibold uppercase tracking-widest text-ink-300 transition hover:text-white;
+    }
+
+    .nav-link-active {
+        @apply text-white shadow-[inset_0_-2px_0_var(--color-neon-violet)];
+    }
+
+    .badge {
+        @apply inline-flex items-center rounded-full border border-ink-700 px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-widest text-ink-300;
+    }
+
+    .card-tile {
+        @apply relative overflow-hidden rounded-[4.75%/3.5%] bg-ink-800 transition duration-200 hover:-translate-y-1 hover:shadow-glow;
+    }
+
+    /* Symboles de mana (SVG Scryfall) intégrés au texte */
+    .mana-symbol {
+        @apply inline-block h-[1.05em] w-[1.05em] align-[-0.15em];
+        filter: drop-shadow(0 1px 0 rgb(0 0 0 / 0.6));
+    }
+}
+
+@layer components {
+    /* Pastilles de rareté (couleurs des symboles d'édition) */
+    .rarity-common { background-color: #9ca3af; }
+    .rarity-uncommon { background: linear-gradient(135deg, #c8d6e0, #6f8796); }
+    .rarity-rare { background: linear-gradient(135deg, #f3d77e, #a8822a); }
+    .rarity-mythic { background: linear-gradient(135deg, #f9a03f, #c7381c); }
+    .rarity-special, .rarity-bonus { background: linear-gradient(135deg, #c084fc, #7c3aed); }
+
+    /* Modale de fiche carte */
+    .card-modal::backdrop {
+        background: rgb(5 6 10 / 0.8);
+        backdrop-filter: blur(4px);
+    }
+}
+
+@layer components {
+    .deck-btn {
+        @apply grid h-6 w-6 place-items-center rounded text-ink-300 transition hover:bg-ink-700 hover:text-white;
+    }
+}
+
+@layer components {
+    /* Pages d'erreur : légère lévitation de la carte et étincelles dans l'illustration */
+    .error-card {
+        animation: error-float 6s ease-in-out infinite;
+    }
+
+    .error-sparks {
+        background-image:
+            radial-gradient(1px 1px at 20% 30%, rgb(255 255 255 / 0.8), transparent),
+            radial-gradient(1px 1px at 70% 20%, rgb(255 255 255 / 0.6), transparent),
+            radial-gradient(1.5px 1.5px at 40% 75%, rgb(255 255 255 / 0.7), transparent),
+            radial-gradient(1px 1px at 85% 65%, rgb(255 255 255 / 0.5), transparent),
+            radial-gradient(1.5px 1.5px at 10% 85%, rgb(255 255 255 / 0.6), transparent);
+        animation: error-twinkle 3s ease-in-out infinite alternate;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .error-card, .error-sparks { animation: none; }
+    }
+}
+
+@keyframes error-float {
+    0%, 100% { transform: translateY(0) rotate(-1.5deg); }
+    50% { transform: translateY(-10px) rotate(1deg); }
+}
+
+@keyframes error-twinkle {
+    from { opacity: 0.4; }
+    to { opacity: 1; }
+}
+
+@layer components {
+    .toast {
+        opacity: 0;
+        transform: translateY(1rem) scale(0.97);
+        transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    .toast-visible {
+        opacity: 1;
+        transform: none;
+    }
+}

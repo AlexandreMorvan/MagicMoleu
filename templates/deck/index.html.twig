@@ -1,0 +1,43 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Decks{% endblock %}
+
+{% block body %}
+    <div class="flex flex-wrap items-center justify-between gap-4">
+        <h1 class="text-3xl uppercase">Decks</h1>
+        {% if app.user %}
+            <a href="{{ path('app_deck_new') }}" class="btn btn-primary">+ Nouveau deck</a>
+        {% endif %}
+    </div>
+
+    {% if app.user %}
+        <section class="mt-8">
+            <h2 class="text-xl uppercase text-ink-300">Mes decks</h2>
+            {% if my_decks is empty %}
+                <div class="panel mt-4 border-dashed p-10 text-center text-ink-300">
+                    Tu n'as pas encore de deck. <a href="{{ path('app_deck_new') }}" class="font-semibold text-neon-cyan hover:underline">Crée le premier</a> !
+                </div>
+            {% else %}
+                <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    {% for deck in my_decks %}{{ include('deck/_deck_card.html.twig', {show_owner: false}) }}{% endfor %}
+                </div>
+            {% endif %}
+        </section>
+    {% else %}
+        <div class="panel mt-8 flex flex-wrap items-center justify-between gap-4 p-6">
+            <p class="text-ink-300">Connecte-toi pour construire tes decks et vérifier leur légalité.</p>
+            <a href="{{ path('app_login') }}" class="btn btn-primary">Connexion</a>
+        </div>
+    {% endif %}
+
+    <section class="mt-12">
+        <h2 class="text-xl uppercase text-ink-300">Derniers decks publics</h2>
+        {% if public_decks is empty %}
+            <p class="mt-4 text-ink-500">Aucun deck public pour l'instant.</p>
+        {% else %}
+            <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {% for deck in public_decks %}{{ include('deck/_deck_card.html.twig', {show_owner: true}) }}{% endfor %}
+            </div>
+        {% endif %}
+    </section>
+{% endblock %}

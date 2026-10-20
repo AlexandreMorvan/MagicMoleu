@@ -1,0 +1,18 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Notifications{% endblock %}
+
+{% block body %}
+    <div class="mx-auto max-w-2xl">
+        <h1 class="text-3xl uppercase">Notifications</h1>
+        <div class="panel mt-6 overflow-hidden">
+            <ul class="divide-y divide-ink-800">
+                {% for notification in notifications %}
+                    <li>{{ include('notification/_item.html.twig') }}</li>
+                {% else %}
+                    <li class="px-4 py-10 text-center text-ink-500">Aucune notification.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+{% endblock %}

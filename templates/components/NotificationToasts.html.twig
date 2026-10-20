@@ -1,0 +1,16 @@
+<div {{ attributes.defaults({class: 'pointer-events-none fixed bottom-4 right-4 z-[60] flex w-[min(24rem,calc(100vw-2rem))] flex-col gap-3', 'aria-live': 'polite'}) }}>
+    {% for notification in this.toasts %}
+        <div id="toast-{{ notification.id }}" class="toast pointer-events-auto panel flex items-start gap-3 border-neon-violet/60 p-4 shadow-glow" data-controller="toast" role="status">
+            {{ include('notification/_icon.html.twig') }}
+            <div class="min-w-0 flex-1">
+                {% if notification.link %}
+                    <a href="{{ notification.link }}" class="font-display font-bold text-white hover:text-neon-cyan">{{ notification.title }}</a>
+                {% else %}
+                    <p class="font-display font-bold text-white">{{ notification.title }}</p>
+                {% endif %}
+                <p class="text-sm text-ink-300">{{ notification.message }}</p>
+            </div>
+            <button type="button" class="text-lg leading-none text-ink-500 hover:text-white" aria-label="Fermer" data-action="toast#dismiss">×</button>
+        </div>
+    {% endfor %}
+</div>

@@ -1,0 +1,28 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Éditions{% endblock %}
+
+{% block body %}
+    <div class="flex flex-wrap items-end justify-between gap-4">
+        <div>
+            <h1 class="text-3xl uppercase">Éditions</h1>
+            <p class="mt-1 text-ink-300">{{ show_all ? 'Toutes les éditions, promos et produits dérivés compris.' : 'Extensions, éditions de base, Masters et Commander.' }}</p>
+        </div>
+        <div class="flex overflow-hidden rounded-lg border border-ink-700" role="group" aria-label="Éditions affichées">
+            <a href="{{ path('app_set_index') }}" class="px-3 py-1.5 text-xs font-semibold uppercase tracking-widest {{ show_all ? 'text-ink-300 hover:text-white' : 'bg-ink-700 text-white' }}">Principales</a>
+            <a href="{{ path('app_set_index', {toutes: 1}) }}" class="px-3 py-1.5 text-xs font-semibold uppercase tracking-widest {{ show_all ? 'bg-ink-700 text-white' : 'text-ink-300 hover:text-white' }}">Toutes</a>
+        </div>
+    </div>
+
+    {% for year, rows in sets_by_year %}
+        <section class="mt-10">
+            <h2 class="text-xl text-ink-300">{{ year }}</h2>
+            <ul class="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+                {% for row in rows %}
+                    {% set set = row.set %}
+                    <li>{{ include('set/_tile.html.twig', {set: set, count: row.cards}) }}</li>
+                {% endfor %}
+            </ul>
+        </section>
+    {% endfor %}
+{% endblock %}

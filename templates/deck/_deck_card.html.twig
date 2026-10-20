@@ -1,0 +1,18 @@
+{# Vignette d'un deck dans une liste. Variables : deck, show_owner #}
+{% set cover = deck.coverCard %}
+<a href="{{ path('app_deck_show', {id: deck.id}) }}" class="panel group block overflow-hidden transition hover:border-neon-violet/60 hover:shadow-glow">
+    <div class="relative h-28 bg-ink-800">
+        {% if cover and cover.artCropUri %}
+            <img src="{{ cover.artCropUri }}" alt="" loading="lazy" class="h-full w-full object-cover opacity-70 transition group-hover:opacity-90">
+        {% endif %}
+        <div class="absolute inset-0 bg-gradient-to-t from-ink-850 to-transparent"></div>
+        <span class="badge absolute left-3 top-3 border-white/20 bg-ink-950/60 text-white">{{ deck.format.label }}</span>
+        {% if not deck.public %}<span class="badge absolute right-3 top-3 border-white/20 bg-ink-950/60 text-ink-300">Privé</span>{% endif %}
+    </div>
+    <div class="p-4">
+        <p class="truncate font-display text-lg font-bold text-white">{{ deck.name }}</p>
+        <p class="text-xs text-ink-500">
+            {% if show_owner %}par {{ deck.owner.username }} · {% endif %}modifié le {{ deck.updatedAt|format_date('short', locale: 'fr') }}
+        </p>
+    </div>
+</a>

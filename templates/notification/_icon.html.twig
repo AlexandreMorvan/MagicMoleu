@@ -1,0 +1,5 @@
+{# Icône d'une notification : symboles Scryfall sur une pastille couleur de rareté. Variable : notification #}
+<span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl ring-1 ring-white/15 rarity-{{ notification.tone ?? 'common' }}">
+    {% set icon = notification.icon ?? '{PW}' %}
+    <span class="flex flex-wrap items-center justify-center gap-px {{ icon|split('{')|length > 3 ? '[&_.mana-symbol]:h-2.5 [&_.mana-symbol]:w-2.5' : '[&_.mana-symbol]:h-4 [&_.mana-symbol]:w-4' }}">{{ icon|mana_symbols }}</span>
+</span>

@@ -1,0 +1,13 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier {{ deck.name }}{% endblock %}
+
+{% block body %}
+    {% set actions %}
+        <a href="{{ path('app_deck_settings', {id: deck.id}) }}" class="btn btn-ghost">Paramètres / import</a>
+        <a href="{{ path('app_deck_show', {id: deck.id}) }}" class="btn btn-primary">Voir le deck</a>
+    {% endset %}
+    {{ include('deck/_header.html.twig') }}
+
+    <twig:DeckEditor deckId="{{ deck.id }}" />
+{% endblock %}

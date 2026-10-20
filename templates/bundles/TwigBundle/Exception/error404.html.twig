@@ -1,0 +1,13 @@
+{{ include('@Twig/Exception/_error_card.html.twig', {
+    code: 404,
+    name: 'Exil sans retour',
+    cost: '{2}{U}',
+    type: 'Rituel',
+    rules: 'Exilez la page ciblée. Elle ne revient pas sur le champ de bataille, même à la fin du tour.',
+    flavor: '« J\'ai fouillé toute la bibliothèque. Cette page n\'a jamais existé… ou quelqu\'un l\'a fait disparaître. »',
+    stats: null,
+    frame: 'from-[#2a6fb5] to-[#123a63]',
+    glow: 'from-sky-400/50 via-indigo-700/30 to-transparent',
+    headline: 'Page introuvable',
+    message: 'Cette page a été exilée, ou elle n\'a jamais été imprimée. Vérifie l\'adresse ou repars de l\'accueil.',
+}) }}

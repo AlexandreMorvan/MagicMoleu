@@ -1,0 +1,16 @@
+<div {{ attributes }}>
+    {{ form_start(form, {attr: {'data-action': 'live#action:prevent', 'data-live-action-param': 'save', novalidate: 'novalidate'}}) }}
+        {{ form_row(form.username) }}
+        {{ form_row(form.email) }}
+        <div class="grid gap-x-4 sm:grid-cols-2">
+            {{ form_row(form.plainPassword.first) }}
+            {{ form_row(form.plainPassword.second) }}
+        </div>
+        {{ form_rest(form) }}
+
+        <button type="submit" class="btn btn-primary mt-2 w-full" data-loading="addAttribute(disabled)">
+            <span data-loading="hide">Créer mon compte</span>
+            <span data-loading="show" hidden>Création…</span>
+        </button>
+    {{ form_end(form) }}
+</div>

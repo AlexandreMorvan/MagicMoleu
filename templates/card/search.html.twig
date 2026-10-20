@@ -1,0 +1,16 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Recherche de cartes{% endblock %}
+
+{% block body %}
+    <h1 class="mb-8 text-3xl uppercase">Recherche de cartes</h1>
+
+    <twig:CardSearch />
+
+    {# Hors du composant live pour ne pas être renvoyée à chaque mise à jour #}
+    <datalist id="set-choices">
+        {% for set in set_choices %}
+            <option value="{{ set.code|upper }}">{{ set.name }}</option>
+        {% endfor %}
+    </datalist>
+{% endblock %}

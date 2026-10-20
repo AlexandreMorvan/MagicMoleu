@@ -1,0 +1,18 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Créer un compte{% endblock %}
+
+{% block body %}
+    <div class="mx-auto max-w-lg">
+        <h1 class="text-3xl uppercase">Créer un compte</h1>
+        <p class="mt-1 text-ink-300">Sauvegarde tes decks et retrouve-les partout.</p>
+
+        <div class="panel mt-8 p-6 sm:p-8">
+            <twig:RegistrationForm />
+        </div>
+
+        <p class="mt-6 text-center text-sm text-ink-300">
+            Déjà inscrit ? <a href="{{ path('app_login') }}" class="font-semibold text-neon-cyan hover:underline">Connecte-toi</a>
+        </p>
+    </div>
+{% endblock %}
