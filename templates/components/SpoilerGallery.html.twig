@@ -49,19 +49,21 @@
                         {% set card = printing.oracleCard %}
                         <li id="spoiler-{{ printing.id }}">
                             <a href="{{ path('app_card_show', {id: card.id, impression: printing.id}) }}" data-turbo-frame="card_modal" class="group block focus-visible:outline-none">
-                                <div class="card-tile aspect-[63/88] group-focus-visible:shadow-glow-cyan">
+                                {% set is_new = day >= yesterday %}
+                                {# Rien par-dessus l'image : le nom imprimé sur la carte doit rester lisible #}
+                                <div class="card-tile aspect-[63/88] group-focus-visible:shadow-glow-cyan {{ is_new ? 'ring-1 ring-neon-violet/70' }}">
                                     {% if printing.imageUri %}
                                         <img src="{{ printing.imageUri }}" alt="{{ card.name }}" loading="lazy" class="h-full w-full object-cover">
                                     {% else %}
                                         <div class="grid h-full place-items-center p-3 text-center font-display text-ink-300">{{ card.name }}</div>
                                     {% endif %}
-                                    {% if day >= yesterday %}
-                                        <span class="badge absolute left-2 top-2 border-transparent bg-gradient-to-r from-neon-violet to-neon-fuchsia text-white shadow-glow">Nouveau</span>
-                                    {% endif %}
                                 </div>
                                 <p class="mt-2 truncate text-sm font-semibold text-white group-hover:text-neon-cyan">{{ card.name }}</p>
                             </a>
                             <p class="flex items-center gap-1.5 truncate text-xs text-ink-500">
+                                {% if is_new %}
+                                    <span class="badge shrink-0 border-transparent bg-gradient-to-r from-neon-violet to-neon-fuchsia px-1.5 py-0 text-[0.6rem] text-white">Nouveau</span>
+                                {% endif %}
                                 <span class="h-2 w-2 shrink-0 rounded-full rarity-{{ printing.rarity.value }}"></span>
                                 {{ printing.set.code|upper }}
                                 {% if printing.previewSource %}
