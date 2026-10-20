@@ -13,22 +13,12 @@
     {% if results is not empty %}
         <ul class="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
             {% for card in results %}
-                {% set fr = card.localization('fr') %}
-                <li>
-                    <div class="card-tile aspect-[63/88]">
-                        {% if card.imageUri %}
-                            <img src="{{ card.imageUri }}" alt="{{ card.name }}" loading="lazy" class="h-full w-full object-cover">
-                        {% else %}
-                            <div class="grid h-full place-items-center p-3 text-center font-display text-ink-300">{{ card.name }}</div>
-                        {% endif %}
-                    </div>
-                    <p class="mt-2 truncate text-sm font-semibold text-white">{{ card.name }}</p>
-                    {% if fr and fr.printedName != card.name %}
-                        <p class="truncate text-xs text-ink-300">{{ fr.printedName }}</p>
-                    {% endif %}
-                </li>
+                <li><twig:CardTile :card="card" /></li>
             {% endfor %}
         </ul>
+        <p class="mt-6 text-center">
+            <a href="{{ path('app_card_search', {q: query}) }}" class="text-sm font-semibold text-neon-cyan hover:underline">Recherche avancée →</a>
+        </p>
     {% elseif query|trim|length >= 2 %}
         <p class="mt-6 text-center text-ink-300">Aucune carte ne correspond à « {{ query }} ».</p>
     {% endif %}

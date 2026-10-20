@@ -1,0 +1,16 @@
+{# Vignette de carte cliquable : ouvre la fiche de la carte dans la modale #}
+{% props card %}
+{% set fr = card.localization('fr') %}
+<a href="{{ path('app_card_show', {id: card.id}) }}" data-turbo-frame="card_modal" class="group block focus-visible:outline-none">
+    <div class="card-tile aspect-[63/88] group-focus-visible:shadow-glow-cyan">
+        {% if card.imageUri %}
+            <img src="{{ card.imageUri }}" alt="{{ card.name }}" loading="lazy" class="h-full w-full object-cover">
+        {% else %}
+            <div class="grid h-full place-items-center p-3 text-center font-display text-ink-300">{{ card.name }}</div>
+        {% endif %}
+    </div>
+    <p class="mt-2 truncate text-sm font-semibold text-white group-hover:text-neon-cyan">{{ card.name }}</p>
+    {% if fr and fr.printedName != card.name %}
+        <p class="truncate text-xs text-ink-300">{{ fr.printedName }}</p>
+    {% endif %}
+</a>

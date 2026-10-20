@@ -16,6 +16,12 @@
     </head>
     <body class="flex min-h-screen flex-col">
         {% set route = app.current_route %}
+        {% set nav_items = [
+            {route: 'app_home', label: 'Accueil', active: ['app_home']},
+            {route: 'app_card_search', label: 'Recherche', active: ['app_card_search', 'app_card_show']},
+            {route: 'app_deck_index', label: 'Decks', active: ['app_deck_index']},
+            {route: 'app_spoilers', label: 'Spoilers', active: ['app_spoilers']},
+        ] %}
         <header class="sticky top-0 z-40 border-b border-ink-800 bg-ink-950/80 backdrop-blur-md">
             <nav class="mx-auto flex h-16 max-w-7xl items-center gap-6 px-4 sm:px-6">
                 <a href="{{ path('app_home') }}" class="group flex items-center gap-2">
@@ -26,9 +32,8 @@
                 </a>
 
                 <div class="hidden items-center gap-1 md:flex">
-                    <a href="{{ path('app_home') }}" class="nav-link {{ route == 'app_home' ? 'nav-link-active' }}">Accueil</a>
-                    {% for label in ['Recherche', 'Decks', 'Spoilers'] %}
-                        <span class="nav-link cursor-default opacity-50" title="Bientôt disponible">{{ label }}</span>
+                    {% for item in nav_items %}
+                        <a href="{{ path(item.route) }}" class="nav-link {{ route in item.active ? 'nav-link-active' }}">{{ item.label }}</a>
                     {% endfor %}
                 </div>
 
@@ -48,6 +53,11 @@
                     {% endif %}
                 </div>
             </nav>
+            <div class="flex gap-1 overflow-x-auto border-t border-ink-800 px-2 md:hidden">
+                {% for item in nav_items %}
+                    <a href="{{ path(item.route) }}" class="nav-link shrink-0 {{ route in item.active ? 'nav-link-active' }}">{{ item.label }}</a>
+                {% endfor %}
+            </div>
         </header>
 
         <main class="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 sm:py-12">
@@ -59,6 +69,18 @@
 
             {% block body %}{% endblock %}
         </main>
+
+        {# Modale de fiche carte : les liens ciblant la frame « card_modal » s'y affichent #}
+        <dialog class="card-modal m-auto w-[min(64rem,calc(100vw-2rem))] max-h-[calc(100vh-2rem)] overflow-y-auto rounded-2xl border border-ink-700 bg-ink-850 p-0 text-ink-100 shadow-2xl shadow-black/60"
+                aria-labelledby="card-modal-title"
+                data-controller="modal"
+                data-action="turbo:frame-load->modal#open close->modal#clear click->modal#closeOnBackdrop">
+            <div class="relative p-6 sm:p-8">
+                <button type="button" class="absolute right-3 top-3 z-10 grid h-9 w-9 place-items-center rounded-full text-xl text-ink-300 transition hover:bg-ink-800 hover:text-white"
+                        aria-label="Fermer" data-action="modal#close" data-modal-target="closeButton">×</button>
+                <turbo-frame id="card_modal" data-modal-target="frame"></turbo-frame>
+            </div>
+        </dialog>
 
         <footer class="border-t border-ink-800 py-6 text-center text-xs leading-relaxed text-ink-500">
             <p>

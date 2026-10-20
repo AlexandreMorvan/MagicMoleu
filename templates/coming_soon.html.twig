@@ -1,0 +1,12 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block body %}
+    <div class="panel mx-auto max-w-2xl border-dashed p-10 text-center sm:p-14">
+        <p class="badge border-neon-cyan/50 text-neon-cyan">Bientôt disponible</p>
+        <h1 class="mt-5 text-4xl uppercase">{{ title }}</h1>
+        <p class="mx-auto mt-3 max-w-md text-ink-300">{{ pitch }}</p>
+        <a href="{{ path('app_card_search') }}" class="btn btn-primary mt-8">Rechercher des cartes</a>
+    </div>
+{% endblock %}

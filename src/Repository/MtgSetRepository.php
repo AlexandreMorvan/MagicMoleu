@@ -20,6 +20,21 @@ class MtgSetRepository extends ServiceEntityRepository
     public const array MAIN_SET_TYPES = ['core', 'expansion', 'masters', 'draft_innovation', 'commander'];
 
     /**
+     * Éditions contenant des cartes, de la plus récente à la plus ancienne (pour l'autocomplétion).
+     *
+     * @return list<array{code: string, name: string}>
+     */
+    public function findForChoices(): array
+    {
+        return $this->createQueryBuilder('s')
+            ->select('s.code', 's.name')
+            ->where('s.cardCount > 0')
+            ->orderBy('s.releasedAt', 'DESC')
+            ->getQuery()
+            ->getArrayResult();
+    }
+
+    /**
      * @return list<MtgSet>
      */
     public function findLatestReleased(int $limit): array

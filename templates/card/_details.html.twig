@@ -1,0 +1,137 @@
+{# Fiche d'une carte, partagée entre la modale et la page complète.
+   Variables : card, printings, selected (impression affichée), formats, legalities, in_modal #}
+{% set fr = card.localization('fr') %}
+{% set legality_styles = {
+    legal: 'border-mana-g/40 bg-mana-g/15 text-mana-g',
+    restricted: 'border-amber-400/40 bg-amber-400/15 text-amber-300',
+    banned: 'border-mana-r/40 bg-mana-r/15 text-mana-r',
+    not_legal: 'border-ink-700 text-ink-500',
+} %}
+
+<div class="grid gap-8 md:grid-cols-[minmax(0,18rem)_1fr]">
+    {# ---------- Illustration de l'impression sélectionnée ---------- #}
+    <div>
+        {% if selected %}
+            {% set images = selected.faceImages %}
+            <div class="space-y-3">
+                {% for image in images %}
+                    <img src="{{ image.large ?? image.normal }}" alt="{{ card.name }}{{ images|length > 1 ? ' – face ' ~ loop.index }}"
+                         class="aspect-[63/88] w-full rounded-[4.75%/3.5%] bg-ink-800 shadow-2xl shadow-black/50">
+                {% endfor %}
+            </div>
+            <dl class="mt-4 space-y-1 text-sm">
+                <div class="flex items-center gap-2 text-white">
+                    {% if selected.set.iconSvgUri %}<img src="{{ selected.set.iconSvgUri }}" alt="" class="h-4 w-4 invert">{% endif %}
+                    <span class="font-semibold">{{ selected.set.name }}</span>
+                </div>
+                <div class="flex items-center gap-2 text-ink-300">
+                    <span class="h-2 w-2 rounded-full rarity-{{ selected.rarity.value }}"></span>
+                    {{ selected.rarity.label }} · #{{ selected.collectorNumber }} · {{ selected.lang|upper }} · {{ selected.releasedAt|date('d/m/Y') }}
+                </div>
+                {% if selected.artist %}<div class="text-ink-300">Illustration : <span class="text-ink-100">{{ selected.artist }}</span></div>{% endif %}
+                {% set prices = selected.prices %}
+                {% if prices.eur ?? prices.usd ?? null %}
+                    <div class="text-ink-300">
+                        Prix :
+                        {% if prices.eur ?? null %}<span class="font-semibold text-white">{{ prices.eur|format_currency('EUR', locale: 'fr') }}</span>{% endif %}
+                        {% if prices.usd ?? null %}<span class="ml-1 text-ink-300">({{ prices.usd|format_currency('USD', locale: 'fr') }})</span>{% endif %}
+                    </div>
+                {% endif %}
+            </dl>
+            {% if selected.flavorText %}
+                <p class="mt-3 border-l-2 border-ink-700 pl-3 text-sm italic text-ink-300">{{ selected.flavorText|nl2br }}</p>
+            {% endif %}
+        {% endif %}
+    </div>
+
+    {# ---------- Informations de la carte ---------- #}
+    <div class="min-w-0">
+        <div class="flex flex-wrap items-start justify-between gap-3 {{ in_modal ? 'pr-10' }}">
+            <div>
+                <h2 class="text-3xl leading-tight" id="card-modal-title">{{ card.name }}</h2>
+                {% if fr and fr.printedName != card.name %}<p class="text-ink-300">{{ fr.printedName }}</p>{% endif %}
+            </div>
+            <p class="text-xl">{{ card.manaCost|mana_symbols }}</p>
+        </div>
+
+        {% if card.faces is not empty %}
+            <div class="mt-5 space-y-4">
+                {% for face in card.faces %}
+                    <section class="rounded-xl border border-ink-800 bg-ink-900/60 p-4">
+                        <div class="flex items-start justify-between gap-3">
+                            <h3 class="text-lg">{{ face.name }}</h3>
+                            <span>{{ face.manaCost|mana_symbols }}</span>
+                        </div>
+                        <p class="mt-1 text-sm font-semibold text-ink-300">{{ face.typeLine }}</p>
+                        {% if face.oracleText %}<p class="mt-3 leading-relaxed">{{ face.oracleText|mana_symbols }}</p>{% endif %}
+                        {% if face.power is not null %}<p class="mt-3 text-right font-display text-lg font-bold">{{ face.power }}/{{ face.toughness }}</p>{% endif %}
+                        {% if face.loyalty is not null %}<p class="mt-3 text-right font-display text-lg font-bold">Loyauté {{ face.loyalty }}</p>{% endif %}
+                    </section>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="mt-4 font-semibold text-ink-300">{{ card.typeLine }}</p>
+            {% if card.oracleText %}
+                <p class="mt-3 leading-relaxed">{{ card.oracleText|mana_symbols }}</p>
+            {% endif %}
+            {% if card.power is not null %}<p class="mt-3 font-display text-xl font-bold">{{ card.power }}/{{ card.toughness }}</p>{% endif %}
+            {% if card.loyalty is not null %}<p class="mt-3 font-display text-xl font-bold">Loyauté {{ card.loyalty }}</p>{% endif %}
+            {% if card.defense is not null %}<p class="mt-3 font-display text-xl font-bold">Défense {{ card.defense }}</p>{% endif %}
+        {% endif %}
+
+        {% if fr and fr.printedText %}
+            <details class="mt-4 rounded-xl border border-ink-800 bg-ink-900/40 px-4 py-3">
+                <summary class="cursor-pointer text-sm font-semibold text-ink-300 hover:text-white">Texte en français</summary>
+                {% if fr.printedTypeLine %}<p class="mt-2 text-sm font-semibold text-ink-300">{{ fr.printedTypeLine }}</p>{% endif %}
+                <p class="mt-2 leading-relaxed">{{ fr.printedText|mana_symbols }}</p>
+            </details>
+        {% endif %}
+
+        {% if card.keywords is not empty %}
+            <div class="mt-4 flex flex-wrap gap-2">
+                {% for keyword in card.keywords %}<span class="badge">{{ keyword }}</span>{% endfor %}
+            </div>
+        {% endif %}
+
+        <h3 class="mt-7 text-sm uppercase tracking-widest text-ink-300">Légalité</h3>
+        <ul class="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-5">
+            {% for format in formats %}
+                {% set status = legalities[format.value] ?? null %}
+                <li class="rounded-lg border px-2 py-1.5 text-center text-xs {{ legality_styles[status.value ?? 'not_legal'] }}">
+                    <span class="block font-semibold">{{ format.label }}</span>
+                    <span class="opacity-80">{{ status ? status.label : 'Non légale' }}</span>
+                </li>
+            {% endfor %}
+        </ul>
+
+        <h3 class="mt-7 text-sm uppercase tracking-widest text-ink-300">
+            Extensions <span class="text-ink-500">({{ printings|length }})</span>
+        </h3>
+        <ul class="mt-2 max-h-72 divide-y divide-ink-800 overflow-y-auto rounded-xl border border-ink-800">
+            {% for printing in printings %}
+                {% set is_selected = selected and printing.id == selected.id %}
+                <li>
+                    <a href="{{ path('app_card_show', {id: card.id, impression: printing.id}) }}"
+                       class="flex items-center gap-3 px-3 py-2 text-sm transition {{ is_selected ? 'bg-neon-violet/15 text-white' : 'hover:bg-ink-800' }}"
+                       {% if is_selected %}aria-current="true"{% endif %}>
+                        {% if printing.set.iconSvgUri %}<img src="{{ printing.set.iconSvgUri }}" alt="" class="h-4 w-4 shrink-0 invert" loading="lazy">{% endif %}
+                        <span class="min-w-0 flex-1 truncate">{{ printing.set.name }}</span>
+                        <span class="h-2 w-2 shrink-0 rounded-full rarity-{{ printing.rarity.value }}" title="{{ printing.rarity.label }}"></span>
+                        <span class="w-20 shrink-0 whitespace-nowrap text-right text-xs text-ink-500">{{ printing.set.code|upper }} #{{ printing.collectorNumber }}</span>
+                        <span class="hidden w-12 shrink-0 text-right text-xs text-ink-500 sm:inline">{{ printing.releasedAt|date('Y') }}</span>
+                        <span class="w-16 shrink-0 text-right text-xs text-ink-300">{{ (printing.prices.eur ?? null) ? printing.prices.eur|format_currency('EUR', locale: 'fr') : '—' }}</span>
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+
+        <div class="mt-6 flex flex-wrap gap-3">
+            {% if in_modal %}
+                <a href="{{ path('app_card_show', {id: card.id}) }}" data-turbo-frame="_top" class="btn btn-ghost">Ouvrir la fiche</a>
+            {% endif %}
+            {% if selected and selected.scryfallUri %}
+                <a href="{{ selected.scryfallUri }}" target="_blank" rel="noopener" data-turbo-frame="_top" class="btn btn-ghost">Voir sur Scryfall ↗</a>
+            {% endif %}
+        </div>
+    </div>
+</div>

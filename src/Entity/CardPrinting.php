@@ -152,6 +152,18 @@ class CardPrinting
         return 0 === $face ? ($this->imageUris[$size] ?? null) : null;
     }
 
+    /**
+     * Images de chaque face imprimée (une seule pour une carte simple, deux pour une carte recto-verso).
+     *
+     * @return list<array<string, string>>
+     */
+    public function getFaceImages(): array
+    {
+        $images = array_is_list($this->imageUris) ? $this->imageUris : [$this->imageUris];
+
+        return array_values(array_filter($images, static fn (array $uris) => isset($uris['normal'])));
+    }
+
     /** @return array<string, ?string> */
     public function getPrices(): array
     {

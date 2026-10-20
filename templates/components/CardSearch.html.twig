@@ -1,0 +1,199 @@
+<div {{ attributes.defaults({class: 'grid gap-8 lg:grid-cols-[18rem_1fr]'}) }}>
+    {# ---------- Filtres ---------- #}
+    <aside>
+        <details class="panel group lg:block" open>
+            <summary class="flex cursor-pointer list-none items-center justify-between p-4 lg:hidden">
+                <span class="font-display font-semibold uppercase tracking-widest">Filtres</span>
+                <span class="text-ink-300 transition group-open:rotate-180">▾</span>
+            </summary>
+
+            <div class="space-y-5 p-4 pt-0 lg:pt-4">
+                <div>
+                    <label for="f-name" class="label">Nom</label>
+                    <input id="f-name" type="search" class="input" data-model="debounce(300)|q" placeholder="Anglais ou français">
+                </div>
+
+                <div>
+                    <label for="f-text" class="label">Texte de règles</label>
+                    <input id="f-text" type="search" class="input" data-model="debounce(300)|text" placeholder="&quot;draw a card&quot; flying">
+                    <p class="mt-1 text-xs text-ink-500">Tous les mots doivent apparaître ; guillemets pour une expression exacte.</p>
+                </div>
+
+                <div>
+                    <label for="f-type" class="label">Type</label>
+                    <input id="f-type" type="search" class="input" data-model="debounce(300)|type" placeholder="Legendary Creature Elf">
+                </div>
+
+                <fieldset>
+                    <legend class="label">Couleurs</legend>
+                    <div class="flex flex-wrap gap-2">
+                        {% for color in colorChoices %}
+                            {% set code = color.value ?? color %}
+                            <label class="cursor-pointer" title="{{ color.label ?? 'Incolore' }}">
+                                <input type="checkbox" class="peer sr-only" data-model="colors" value="{{ code }}">
+                                <span class="grid h-9 w-9 place-items-center rounded-full border border-ink-700 bg-ink-900 opacity-50 grayscale transition hover:opacity-80 peer-checked:border-neon-violet peer-checked:opacity-100 peer-checked:shadow-glow peer-checked:grayscale-0 peer-focus-visible:outline-2 peer-focus-visible:outline-neon-cyan">
+                                    <img src="https://svgs.scryfall.io/card-symbols/{{ code }}.svg" alt="{{ color.label ?? 'Incolore' }}" class="h-6 w-6">
+                                </span>
+                            </label>
+                        {% endfor %}
+                    </div>
+                    <select class="input mt-3" data-model="colorMode" aria-label="Mode de comparaison des couleurs">
+                        <option value="include">Au moins ces couleurs</option>
+                        <option value="exact">Exactement ces couleurs</option>
+                        <option value="atmost">Au plus ces couleurs</option>
+                    </select>
+                    <label class="mt-2 flex items-center gap-2 text-sm text-ink-300">
+                        <input type="checkbox" class="h-4 w-4 accent-neon-violet" data-model="identity">
+                        Utiliser l'identité couleur (Commander)
+                    </label>
+                </fieldset>
+
+                {% for range in [
+                    {label: 'Valeur de mana', min: 'cmcMin', max: 'cmcMax', step: '0.5'},
+                    {label: 'Force', min: 'powMin', max: 'powMax', step: '1'},
+                    {label: 'Endurance', min: 'touMin', max: 'touMax', step: '1'},
+                ] %}
+                    <fieldset>
+                        <legend class="label">{{ range.label }}</legend>
+                        <div class="flex items-center gap-2">
+                            <input type="number" min="0" step="{{ range.step }}" class="input" placeholder="min" aria-label="{{ range.label }} minimum" data-model="debounce(400)|{{ range.min }}">
+                            <span class="text-ink-500">–</span>
+                            <input type="number" min="0" step="{{ range.step }}" class="input" placeholder="max" aria-label="{{ range.label }} maximum" data-model="debounce(400)|{{ range.max }}">
+                        </div>
+                    </fieldset>
+                {% endfor %}
+
+                <fieldset>
+                    <legend class="label">Rareté</legend>
+                    <div class="grid grid-cols-2 gap-2">
+                        {% for rarity in rarityChoices %}
+                            <label class="flex items-center gap-2 text-sm text-ink-100">
+                                <input type="checkbox" class="h-4 w-4 accent-neon-violet" data-model="rarities" value="{{ rarity.value }}">
+                                <span class="h-2 w-2 rounded-full rarity-{{ rarity.value }}"></span>
+                                {{ rarity.label }}
+                            </label>
+                        {% endfor %}
+                    </div>
+                </fieldset>
+
+                <div>
+                    <label for="f-set" class="label">Édition</label>
+                    <input id="f-set" type="search" class="input" list="set-choices" data-model="debounce(400)|set" placeholder="Code (ex. FDN)">
+                </div>
+
+                <fieldset>
+                    <legend class="label">Format</legend>
+                    <div class="grid grid-cols-[1fr_auto] gap-2">
+                        <select class="input" data-model="format" aria-label="Format">
+                            <option value="">Tous</option>
+                            {% for f in formatChoices %}
+                                <option value="{{ f.value }}">{{ f.label }}</option>
+                            {% endfor %}
+                        </select>
+                        <select class="input" data-model="legality" aria-label="Statut" {{ format ? '' : 'disabled' }}>
+                            <option value="legal">Légale</option>
+                            <option value="banned">Bannie</option>
+                            <option value="restricted">Restreinte</option>
+                        </select>
+                    </div>
+                </fieldset>
+
+                <div>
+                    <label for="f-keyword" class="label">Mot-clé</label>
+                    <input id="f-keyword" type="search" class="input" data-model="debounce(400)|keyword" placeholder="Flying, Trample, Ward…">
+                </div>
+
+                {% if this.hasFilters %}
+                    <button type="button" class="btn btn-ghost w-full" data-action="live#action" data-live-action-param="resetFilters">
+                        Réinitialiser les filtres
+                    </button>
+                {% endif %}
+            </div>
+        </details>
+    </aside>
+
+    {# ---------- Résultats ---------- #}
+    {% set result = this.result %}
+    <section>
+        <div class="mb-5 flex flex-wrap items-center gap-3">
+            <p class="font-display text-lg font-semibold text-white">
+                {{ result.total|format_number(locale: 'fr') }} carte{{ result.total > 1 ? 's' }}
+            </p>
+            <span data-loading class="h-4 w-4 animate-spin rounded-full border-2 border-neon-violet border-t-transparent" hidden></span>
+
+            <div class="ml-auto flex items-center gap-2">
+                <select class="input w-auto py-1.5 text-sm" data-model="sort" aria-label="Trier par">
+                    <option value="name">Nom</option>
+                    <option value="cmc">Valeur de mana</option>
+                    <option value="edhrec">Popularité (EDHREC)</option>
+                    <option value="recent">Date de sortie</option>
+                </select>
+                <button type="button" class="btn btn-ghost px-2 py-1.5"
+                        title="{{ dir == 'asc' ? 'Ordre croissant' : 'Ordre décroissant' }}"
+                        data-action="live#action" data-live-action-param="toggleDirection">
+                    {{ dir == 'asc' ? '↑' : '↓' }}
+                </button>
+                <div class="flex overflow-hidden rounded-lg border border-ink-700" role="group" aria-label="Affichage">
+                    {% for mode, label in {grid: 'Grille', list: 'Liste'} %}
+                        <button type="button" class="px-3 py-1.5 text-xs font-semibold uppercase tracking-widest {{ view == mode ? 'bg-ink-700 text-white' : 'text-ink-300 hover:text-white' }}"
+                                data-action="live#action" data-live-action-param="setView" data-live-view-param="{{ mode }}">{{ label }}</button>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div data-loading="addClass(opacity-50)" class="transition-opacity">
+            {% if result.cards is empty %}
+                <div class="panel border-dashed p-12 text-center text-ink-300">Aucune carte ne correspond à ces critères.</div>
+            {% elseif view == 'list' %}
+                <div class="panel overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead class="border-b border-ink-800 text-xs uppercase tracking-widest text-ink-500">
+                            <tr>
+                                <th class="px-4 py-3 font-semibold">Nom</th>
+                                <th class="px-4 py-3 font-semibold">Coût</th>
+                                <th class="hidden px-4 py-3 font-semibold sm:table-cell">Type</th>
+                                <th class="px-4 py-3 text-right font-semibold">F/E</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-ink-800">
+                            {% for card in result.cards %}
+                                {% set fr = card.localization('fr') %}
+                                <tr class="transition hover:bg-ink-800/60">
+                                    <td class="px-4 py-2.5">
+                                        <a href="{{ path('app_card_show', {id: card.id}) }}" data-turbo-frame="card_modal" class="font-semibold text-white hover:text-neon-cyan">{{ card.name }}</a>
+                                        {% if fr and fr.printedName != card.name %}<span class="block text-xs text-ink-300">{{ fr.printedName }}</span>{% endif %}
+                                    </td>
+                                    <td class="whitespace-nowrap px-4 py-2.5">{{ card.manaCost|mana_symbols }}</td>
+                                    <td class="hidden px-4 py-2.5 text-ink-300 sm:table-cell">{{ card.typeLine }}</td>
+                                    <td class="px-4 py-2.5 text-right text-ink-300">{{ card.power is not null ? card.power ~ '/' ~ card.toughness : (card.loyalty ?? '') }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <ul class="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+                    {% for card in result.cards %}
+                        <li><twig:CardTile :card="card" /></li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+
+        {% if result.pageCount > 1 %}
+            {% set current = result.page %}
+            {% set last = result.pageCount %}
+            <nav class="mt-8 flex flex-wrap items-center justify-center gap-1" aria-label="Pagination">
+                {% for p in [1, current - 2, current - 1, current, current + 1, current + 2, last]|filter(p => p >= 1 and p <= last)|reduce((acc, p) => p in acc ? acc : acc|merge([p]), [])|sort %}
+                    {% if not loop.first and p > prev + 1 %}<span class="px-1 text-ink-500">…</span>{% endif %}
+                    <button type="button"
+                            class="min-w-9 rounded-lg px-3 py-1.5 text-sm font-semibold {{ p == current ? 'bg-gradient-to-r from-neon-violet to-neon-fuchsia text-white' : 'text-ink-300 hover:bg-ink-800 hover:text-white' }}"
+                            {% if p == current %}aria-current="page"{% endif %}
+                            data-action="live#action" data-live-action-param="goToPage" data-live-page-param="{{ p }}">{{ p }}</button>
+                    {% set prev = p %}
+                {% endfor %}
+            </nav>
+        {% endif %}
+    </section>
+</div>

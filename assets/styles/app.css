@@ -108,3 +108,18 @@
         filter: drop-shadow(0 1px 0 rgb(0 0 0 / 0.6));
     }
 }
+
+@layer components {
+    /* Pastilles de rareté (couleurs des symboles d'édition) */
+    .rarity-common { background-color: #9ca3af; }
+    .rarity-uncommon { background: linear-gradient(135deg, #c8d6e0, #6f8796); }
+    .rarity-rare { background: linear-gradient(135deg, #f3d77e, #a8822a); }
+    .rarity-mythic { background: linear-gradient(135deg, #f9a03f, #c7381c); }
+    .rarity-special, .rarity-bonus { background: linear-gradient(135deg, #c084fc, #7c3aed); }
+
+    /* Modale de fiche carte */
+    .card-modal::backdrop {
+        background: rgb(5 6 10 / 0.8);
+        backdrop-filter: blur(4px);
+    }
+}
