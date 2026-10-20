@@ -61,7 +61,7 @@ class CardControllerTest extends WebTestCase
 
         // Le fragment de la modale est mis en cache par le navigateur
         $response = $this->client->getResponse();
-        self::assertStringContainsString('max-age=600', $response->headers->get('Cache-Control'));
+        self::assertStringContainsString('max-age=86400', $response->headers->get('Cache-Control'));
         self::assertStringContainsString('private', $response->headers->get('Cache-Control'));
         self::assertContains('Turbo-Frame', $response->getVary());
     }

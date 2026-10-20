@@ -18,7 +18,8 @@ use Symfony\Component\Routing\Requirement\Requirement;
 
 class CardController extends AbstractController
 {
-    private const int MODAL_CACHE_TTL = 600;
+    /** Les données des cartes ne changent qu'une fois par jour (import quotidien) */
+    private const int MODAL_CACHE_TTL = 86400;
 
     /** Formats affichés sur la fiche d'une carte. */
     private const array DISPLAYED_FORMATS = [
@@ -65,7 +66,7 @@ class CardController extends AbstractController
         ]);
 
         if ($inModal) {
-            // Le fragment de la modale ne dépend pas de l'utilisateur : le navigateur le garde 10 minutes,
+            // Le fragment de la modale ne dépend pas de l'utilisateur : le navigateur le garde 24 heures,
             // rouvrir une carte déjà vue ne refait donc pas de requête.
             $response->setPrivate()->setMaxAge(self::MODAL_CACHE_TTL);
             $response->setVary('Turbo-Frame');
