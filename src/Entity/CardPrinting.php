@@ -15,7 +15,8 @@ use Symfony\Component\Uid\Uuid;
 #[ORM\Entity(repositoryClass: CardPrintingRepository::class)]
 #[ORM\UniqueConstraint(name: 'uniq_printing_set_number_lang', columns: ['set_id', 'collector_number', 'lang'])]
 #[ORM\Index(name: 'idx_printing_released_at', columns: ['released_at'])]
-#[ORM\Index(name: 'idx_printing_rarity', columns: ['rarity'])]
+// Couvre le filtre de rareté de la recherche (EXISTS sur rarity + oracle_card_id) sans lire les lignes
+#[ORM\Index(name: 'idx_printing_rarity_oracle', columns: ['rarity', 'oracle_card_id'])]
 #[ORM\Index(name: 'idx_printing_revealed_at', columns: ['revealed_at'])]
 class CardPrinting
 {

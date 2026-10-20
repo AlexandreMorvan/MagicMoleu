@@ -36,6 +36,16 @@ symfony serve -d
 Les fichiers bulk sont mis en cache dans `var/scryfall/` et ne sont retéléchargés / réimportés que si Scryfall
 en publie une nouvelle version (`--force` pour réimporter quand même). Un verrou empêche deux imports simultanés.
 
+> **En environnement `dev`, lancer les imports avec `--no-debug`.** En mode debug, Doctrine conserve chaque
+> requête SQL pour le profiler : la mémoire grimpe jusqu'à la limite (1 Go) et `import-cards` plante vers
+> 90 000 cartes. Avec `--no-debug`, elle reste stable (~80 Mo). Même chose pour le worker `messenger:consume`.
+> Inutile en `prod`, où le debug est désactivé.
+>
+> ```bash
+> bin/console app:scryfall:import-cards --no-debug
+> bin/console messenger:consume scheduler_default --no-debug
+> ```
+
 ### Planification
 
 Les tâches sont déclarées dans `src/Schedule.php` (Symfony Scheduler) et exécutées par un worker Messenger,
