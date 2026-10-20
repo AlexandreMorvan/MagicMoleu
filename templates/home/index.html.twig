@@ -1,0 +1,49 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <section class="mx-auto max-w-3xl pt-6 text-center sm:pt-12">
+        <p class="badge mb-5 border-neon-violet/50 text-neon-violet">Base de cartes Magic: The Gathering</p>
+        <h1 class="text-4xl uppercase sm:text-6xl">
+            Trouve. Construis.
+            <span class="bg-gradient-to-r from-neon-violet via-neon-fuchsia to-neon-cyan bg-clip-text text-transparent">Domine.</span>
+        </h1>
+        <p class="mx-auto mt-4 max-w-xl text-ink-300">
+            Recherche parmi toutes les cartes jamais imprimées, construis tes decks Standard et Commander
+            et vérifie leur légalité face aux ban lists.
+        </p>
+        <div class="mt-10 text-left">
+            <twig:QuickSearch />
+        </div>
+    </section>
+
+    {% set latest_expansion = latest_sets|filter(s => s.setType in ['expansion', 'core'])|first %}
+    <section class="mt-16 grid gap-4 sm:grid-cols-3">
+        {% for stat in [
+            {value: card_count|format_number(locale: 'fr'), label: 'cartes uniques'},
+            {value: set_count|format_number(locale: 'fr'), label: 'éditions'},
+            {value: latest_expansion ? latest_expansion.name : '—', label: 'dernière extension'},
+        ] %}
+            <div class="panel p-5">
+                <p class="truncate font-display text-3xl font-bold text-white">{{ stat.value }}</p>
+                <p class="mt-1 text-xs uppercase tracking-widest text-ink-300">{{ stat.label }}</p>
+            </div>
+        {% endfor %}
+    </section>
+
+    {% if latest_sets is not empty %}
+        <section class="mt-16">
+            <h2 class="text-2xl uppercase">Dernières éditions</h2>
+            <ul class="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+                {% for set in latest_sets %}
+                    <li class="panel group flex flex-col items-center p-5 text-center transition hover:border-neon-violet/60 hover:shadow-glow">
+                        {% if set.iconSvgUri %}
+                            <img src="{{ set.iconSvgUri }}" alt="" class="h-10 w-10 invert transition group-hover:scale-110" loading="lazy">
+                        {% endif %}
+                        <p class="mt-3 line-clamp-2 text-sm font-semibold text-white">{{ set.name }}</p>
+                        <p class="mt-1 text-xs uppercase tracking-widest text-ink-500">{{ set.code }} · {{ set.releasedAt|date('m/Y') }}</p>
+                    </li>
+                {% endfor %}
+            </ul>
+        </section>
+    {% endif %}
+{% endblock %}

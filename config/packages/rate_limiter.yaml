@@ -1,0 +1,7 @@
+framework:
+    rate_limiter:
+        # Scryfall demande de ne pas dépasser ~10 requêtes par seconde
+        scryfall:
+            policy: token_bucket
+            limit: 10
+            rate: { interval: '1 second', amount: 10 }

@@ -1,0 +1,38 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Connexion{% endblock %}
+
+{% block body %}
+    <div class="mx-auto max-w-md">
+        <h1 class="text-3xl uppercase">Connexion</h1>
+        <p class="mt-1 text-ink-300">Content de te revoir, planeswalker.</p>
+
+        <form method="post" action="{{ path('app_login') }}" class="panel mt-8 p-6 sm:p-8" data-turbo="false">
+            {% if error %}
+                <p class="mb-5 rounded-lg border border-mana-r/50 bg-mana-r/10 px-3 py-2 text-sm text-mana-r">
+                    {{ error.messageKey|trans(error.messageData, 'security') }}
+                </p>
+            {% endif %}
+
+            <div class="mb-5">
+                <label for="username" class="label">Email</label>
+                <input type="email" value="{{ last_username }}" name="_username" id="username" class="input" autocomplete="email" required autofocus>
+            </div>
+            <div class="mb-5">
+                <label for="password" class="label">Mot de passe</label>
+                <input type="password" name="_password" id="password" class="input" autocomplete="current-password" required>
+            </div>
+            <label class="mb-6 flex items-center gap-2 text-sm text-ink-300">
+                <input type="checkbox" name="_remember_me" class="h-4 w-4 accent-neon-violet"> Rester connecté
+            </label>
+
+            <input type="hidden" name="_csrf_token" data-controller="csrf-protection" value="{{ csrf_token('authenticate') }}">
+
+            <button class="btn btn-primary w-full" type="submit">Se connecter</button>
+        </form>
+
+        <p class="mt-6 text-center text-sm text-ink-300">
+            Pas encore de compte ? <a href="{{ path('app_register') }}" class="font-semibold text-neon-cyan hover:underline">Inscris-toi</a>
+        </p>
+    </div>
+{% endblock %}

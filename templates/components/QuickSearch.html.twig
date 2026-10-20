@@ -1,0 +1,35 @@
+<div {{ attributes }}>
+    <label for="quick-search" class="sr-only">Rechercher une carte</label>
+    <div class="relative">
+        <svg class="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-ink-500" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 1 0 3.47 9.77l3.63 3.63a.75.75 0 1 0 1.06-1.06l-3.63-3.63A5.5 5.5 0 0 0 9 3.5ZM5 9a4 4 0 1 1 8 0 4 4 0 0 1-8 0Z" clip-rule="evenodd"/></svg>
+        <input id="quick-search" type="search" autocomplete="off"
+               data-model="debounce(250)|query"
+               placeholder="Foudre, Sol Ring, Atraxa…"
+               class="input h-14 pl-12 text-lg">
+        <span data-loading class="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 animate-spin rounded-full border-2 border-neon-violet border-t-transparent" hidden></span>
+    </div>
+
+    {% set results = this.results %}
+    {% if results is not empty %}
+        <ul class="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+            {% for card in results %}
+                {% set fr = card.localization('fr') %}
+                <li>
+                    <div class="card-tile aspect-[63/88]">
+                        {% if card.imageUri %}
+                            <img src="{{ card.imageUri }}" alt="{{ card.name }}" loading="lazy" class="h-full w-full object-cover">
+                        {% else %}
+                            <div class="grid h-full place-items-center p-3 text-center font-display text-ink-300">{{ card.name }}</div>
+                        {% endif %}
+                    </div>
+                    <p class="mt-2 truncate text-sm font-semibold text-white">{{ card.name }}</p>
+                    {% if fr and fr.printedName != card.name %}
+                        <p class="truncate text-xs text-ink-300">{{ fr.printedName }}</p>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    {% elseif query|trim|length >= 2 %}
+        <p class="mt-6 text-center text-ink-300">Aucune carte ne correspond à « {{ query }} ».</p>
+    {% endif %}
+</div>
