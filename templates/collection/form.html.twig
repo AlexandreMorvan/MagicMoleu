@@ -1,0 +1,25 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ collection ? 'Paramètres de la collection' : 'Nouvelle collection' }}{% endblock %}
+
+{% block body %}
+    <div class="mx-auto max-w-2xl">
+        <h1 class="text-3xl uppercase">{{ collection ? 'Paramètres de la collection' : 'Nouvelle collection' }}</h1>
+
+        {{ form_start(form, {attr: {class: 'panel mt-8 p-6 sm:p-8', novalidate: 'novalidate'}}) }}
+            {{ form_row(form.name) }}
+            {{ form_row(form.description) }}
+            <div class="flex flex-wrap gap-3">
+                <button type="submit" class="btn btn-primary">{{ collection ? 'Enregistrer' : 'Créer la collection' }}</button>
+                <a href="{{ collection ? path('app_collection_show', {id: collection.id}) : path('app_collection_index') }}" class="btn btn-ghost">Annuler</a>
+            </div>
+        {{ form_end(form) }}
+
+        {% if collection %}
+            <form method="post" action="{{ path('app_collection_delete', {id: collection.id}) }}" class="mt-6 text-right" data-turbo-confirm="Supprimer définitivement cette collection et toutes ses cartes ?">
+                <input type="hidden" name="_token" value="{{ csrf_token('delete-collection-' ~ collection.id) }}">
+                <button type="submit" class="text-sm font-semibold text-mana-r hover:underline">Supprimer cette collection</button>
+            </form>
+        {% endif %}
+    </div>
+{% endblock %}

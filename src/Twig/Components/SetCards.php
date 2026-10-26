@@ -37,8 +37,15 @@ class SetCards
     #[LiveProp(writable: true, url: true, onUpdated: 'resetLimit')]
     public string $sort = 'number';
 
+    /** Afficher les extras (variantes d'illustration, traitements, promos). */
+    #[LiveProp(writable: true, url: true, onUpdated: 'resetLimit')]
+    public bool $extras = false;
+
     #[LiveProp]
     public int $limit = self::PAGE_SIZE;
+
+    /** @var array{main: int, extra: int}|null */
+    private ?array $counts = null;
 
     /** @var list<CardPrinting>|null */
     private ?array $cards = null;
@@ -71,6 +78,8 @@ class SetCards
             \in_array('C', $this->colors, true),
             $this->sort,
             $this->limit + 1,
+            // Une édition faite uniquement d'extras (Secret Lair, promos…) les montre toujours
+            $this->extras || !$this->hasMainCards(),
         );
 
         return \array_slice($this->cards, 0, $this->limit);
@@ -81,6 +90,27 @@ class SetCards
         $this->getCards();
 
         return \count($this->cards) > $this->limit;
+    }
+
+    /**
+     * @return array{main: int, extra: int}
+     */
+    public function getCounts(): array
+    {
+        return $this->counts ??= $this->printings->countMainAndExtrasBySet($this->set);
+    }
+
+    public function hasMainCards(): bool
+    {
+        return $this->getCounts()['main'] > 0;
+    }
+
+    /**
+     * La case « extras » n'a de sens que si l'édition a à la fois une liste principale et des extras.
+     */
+    public function canToggleExtras(): bool
+    {
+        return $this->hasMainCards() && $this->getCounts()['extra'] > 0;
     }
 
     #[ExposeInTemplate]

@@ -29,6 +29,17 @@ class CardImporterTest extends KernelTestCase
         self::assertSame(10, $count);
     }
 
+    public function testFlagsExtraPrintings(): void
+    {
+        $extra = fn (string $name) => $this->em->getRepository(CardPrinting::class)->createQueryBuilder('p')
+            ->join('p.oracleCard', 'o')->where('o.name LIKE :name')->setParameter('name', $name.'%')
+            ->getQuery()->getSingleResult()->isExtra();
+
+        self::assertTrue($extra('Adrix and Nev'), 'Secret Lair sans bordure, poster');
+        self::assertFalse($extra('Lightning Bolt'));
+        self::assertFalse($extra('Badgermole Cub'), 'le type de promo « universesbeyond » n\'est pas un traitement');
+    }
+
     public function testImportsOneRowPerTable(): void
     {
         self::assertSame(10, $this->countRows(OracleCard::class));

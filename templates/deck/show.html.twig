@@ -13,11 +13,17 @@
 
     <div class="grid gap-6 lg:grid-cols-[1fr_20rem]">
         <div class="space-y-4">
+            {% if deck.cards is not empty %}
+                {{ include('deck/_display_switch.html.twig', {live: false}) }}
+            {% endif %}
             {{ include('deck/_card_list.html.twig', {zones: deck.zones, editable: false}) }}
             {% if deck.cards is empty %}
                 <div class="panel border-dashed p-10 text-center text-ink-300">Ce deck est vide.</div>
             {% endif %}
         </div>
-        <aside>{{ include('deck/_sidebar.html.twig') }}</aside>
+        <aside>
+            {{ include('deck/_sidebar.html.twig') }}
+            {{ include('deck/_add_to_collection.html.twig') }}
+        </aside>
     </div>
 {% endblock %}

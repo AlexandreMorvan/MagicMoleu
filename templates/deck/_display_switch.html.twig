@@ -1,0 +1,25 @@
+{# Choix de la vue et du regroupement des cartes d'un deck.
+   Variables : view (DeckView), grouping (DeckGrouping), live (true dans le composant DeckEditor : actions live au lieu de liens) #}
+{% set options = [
+    {param: 'vue', action: 'changeView', label: 'Vue', current: view, choices: enum_cases('App\\Enum\\DeckView')},
+    {param: 'groupe', action: 'changeGrouping', label: 'Grouper par', current: grouping, choices: enum_cases('App\\Enum\\DeckGrouping')},
+] %}
+<div class="flex flex-wrap items-center gap-x-5 gap-y-2">
+    {% for option in options %}
+        <div class="flex items-center gap-2">
+            <span class="text-xs font-semibold uppercase tracking-widest text-ink-500">{{ option.label }}</span>
+            <div class="flex overflow-hidden rounded-lg border border-ink-700" role="group" aria-label="{{ option.label }}">
+                {% for choice in option.choices %}
+                    {% set classes = 'px-3 py-1.5 text-xs font-semibold uppercase tracking-wider transition ' ~ (choice == option.current ? 'bg-neon-violet/25 text-white' : 'text-ink-300 hover:bg-ink-800') %}
+                    {% if live %}
+                        <button type="button" class="{{ classes }}" aria-pressed="{{ choice == option.current ? 'true' : 'false' }}"
+                                data-action="live#action" data-live-action-param="{{ option.action }}" data-live-value-param="{{ choice.value }}">{{ choice.label }}</button>
+                    {% else %}
+                        <a href="{{ path(app.current_route, app.current_route_parameters|merge(app.request.query.all)|merge({(option.param): choice.value})) }}"
+                           class="{{ classes }}" {% if choice == option.current %}aria-current="true"{% endif %}>{{ choice.label }}</a>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    {% endfor %}
+</div>

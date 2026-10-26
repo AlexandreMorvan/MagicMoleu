@@ -136,6 +136,49 @@ class DeckControllerTest extends WebTestCase
         self::assertSame(4, $this->reload($deck)->countIn(DeckZone::Main));
     }
 
+    public function testDeckViewsAndGroupings(): void
+    {
+        $deck = self::buildDeck(\App\Enum\Format::Modern, ['Lightning Bolt' => 4, 'Counterspell' => 2, 'Forest' => 10], $this->owner)->setName('Izzet')->setPublic(true);
+        $em = self::getContainer()->get(EntityManagerInterface::class);
+        $em->persist($deck);
+        $em->flush();
+
+        // Par défaut : liste groupée par type
+        $crawler = $this->client->request('GET', '/decks/'.$deck->getId());
+        $groups = $crawler->filter('main div.space-y-4 > section h3')->each(static fn ($h) => trim(preg_replace('/\s+/', ' ', $h->text())));
+        self::assertSame(['Éphémères (6)', 'Terrains (10)'], $groups);
+        self::assertSame(['Liste', 'Type'], $crawler->filter('a[aria-current="true"]')->each(static fn ($a) => $a->text()));
+
+        $crawler = $this->client->request('GET', '/decks/'.$deck->getId().'?vue=visuelle&groupe=couleur');
+        self::assertResponseIsSuccessful();
+        $groups = $crawler->filter('main div.space-y-4 > section h3')->each(static fn ($h) => trim(preg_replace('/\s+/', ' ', $h->text())));
+        self::assertSame(['Bleu (2)', 'Rouge (4)', 'Terrains (10)'], $groups);
+        self::assertCount(3, $crawler->filter('main div.space-y-4 .card-tile img'));
+
+        $crawler = $this->client->request('GET', '/decks/'.$deck->getId().'?vue=detaillee&groupe=ccm');
+        $groups = $crawler->filter('main div.space-y-4 > section h3')->each(static fn ($h) => trim(preg_replace('/\s+/', ' ', $h->text())));
+        self::assertSame(['CCM 1 (4)', 'CCM 2 (2)', 'Terrains (10)'], $groups);
+        self::assertSelectorTextContains('main table', 'Instant');
+
+        $this->client->request('GET', '/decks/'.$deck->getId().'?vue=inconnue');
+        self::assertResponseStatusCodeSame(404);
+    }
+
+    public function testEditorViewAndGrouping(): void
+    {
+        $deck = $this->persistDeck(public: false);
+        $this->client->loginUser($this->owner);
+        $component = $this->createLiveComponent(DeckEditor::class, ['deckId' => $deck->getId()], $this->client)
+            ->actingAs($this->owner);
+
+        $component->call('changeView', ['value' => 'visuelle'])->call('changeGrouping', ['value' => 'couleur']);
+        $html = $component->render()->toString();
+
+        self::assertStringContainsString('Rouge (4)', $html);
+        self::assertStringContainsString('card-tile', $html);
+        self::assertStringContainsString('data-live-action-param="changeQuantity"', $html, 'la vue visuelle reste éditable');
+    }
+
     public function testDeleteDeck(): void
     {
         $deck = $this->persistDeck(public: false);

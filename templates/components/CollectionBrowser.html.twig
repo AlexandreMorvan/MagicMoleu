@@ -1,0 +1,133 @@
+{% set collection = this.collection %}
+<div {{ attributes.defaults({class: 'grid gap-6 lg:grid-cols-[1fr_20rem]'}) }}>
+    <div class="min-w-0 space-y-4">
+        {# ---------- Filtres et affichage ---------- #}
+        <section class="panel flex flex-wrap items-center gap-3 p-4">
+            <input type="search" class="input w-full sm:w-44 py-1.5 text-sm" data-model="debounce(250)|query" placeholder="Filtrer par nom…" aria-label="Filtrer par nom">
+            <select class="input w-auto py-1.5 text-sm" data-model="rarity" aria-label="Rareté">
+                <option value="">Toutes raretés</option>
+                {% for rarity in this.rarityChoices %}<option value="{{ rarity.value }}">{{ rarity.label }}</option>{% endfor %}
+            </select>
+            <select class="input w-auto py-1.5 text-sm" data-model="color" aria-label="Couleur">
+                <option value="">Toutes couleurs</option>
+                {% for group in this.colorChoices %}<option value="{{ group.value }}">{{ group.label }}</option>{% endfor %}
+            </select>
+            <select class="input w-auto py-1.5 text-sm" data-model="sort" aria-label="Classer par">
+                {% for value, label in constant('App\\Twig\\Components\\CollectionBrowser::SORTS') %}<option value="{{ value }}">Classer : {{ label }}</option>{% endfor %}
+            </select>
+            <span data-loading class="h-4 w-4 animate-spin rounded-full border-2 border-neon-violet border-t-transparent" hidden></span>
+            <div class="ml-auto flex overflow-hidden rounded-lg border border-ink-700" role="group" aria-label="Vue">
+                {% for value, label in constant('App\\Twig\\Components\\CollectionBrowser::VIEWS') %}
+                    <button type="button" class="px-3 py-1.5 text-xs font-semibold uppercase tracking-wider transition {{ view == value ? 'bg-neon-violet/25 text-white' : 'text-ink-300 hover:bg-ink-800' }}"
+                            aria-pressed="{{ view == value ? 'true' : 'false' }}"
+                            data-action="live#action" data-live-action-param="changeView" data-live-view-param="{{ value }}">{{ label }}</button>
+                {% endfor %}
+            </div>
+        </section>
+
+        {# ---------- Cartes, en sections selon le classement (édition, tranche de prix, rareté) ---------- #}
+        {% set sections = this.sections %}
+        <div data-loading="addClass(opacity-60)" class="transition-opacity">
+            {% if collection.cards is empty %}
+                <div class="panel border-dashed p-10 text-center text-ink-300">
+                    Cette collection est vide : ouvre la fiche d'une carte (<a href="{{ path('app_card_search') }}" class="text-neon-cyan hover:underline">recherche</a>,
+                    <a href="{{ path('app_set_index') }}" class="text-neon-cyan hover:underline">éditions</a>, <a href="{{ path('app_spoilers') }}" class="text-neon-cyan hover:underline">spoilers</a>)
+                    pour l'ajouter, ou ajoute tout un deck depuis sa page.
+                </div>
+            {% elseif sections is empty %}
+                <div class="panel border-dashed p-10 text-center text-ink-300">Aucune carte ne correspond à ces filtres.</div>
+            {% elseif view == 'list' %}
+                <div class="panel overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="text-left text-[0.65rem] uppercase tracking-widest text-ink-500">
+                            <tr>
+                                <th class="px-3 py-2 text-right">Qté</th>
+                                <th class="px-3 py-2">Carte</th>
+                                <th class="hidden px-3 py-2 md:table-cell">Coût</th>
+                                <th class="px-3 py-2">Édition</th>
+                                <th class="px-3 py-2 text-right">Prix</th>
+                                <th class="px-3 py-2 text-right">Total</th>
+                                <th class="px-3 py-2"><span class="sr-only">Actions</span></th>
+                            </tr>
+                        </thead>
+                        {% for section in sections %}
+                            <tbody class="divide-y divide-ink-800 border-t border-ink-800">
+                                {% if section.label %}
+                                    <tr class="bg-ink-900/70">
+                                        <th colspan="7" scope="rowgroup" class="px-3 py-2 text-left">{{ include('collection/_section_header.html.twig') }}</th>
+                                    </tr>
+                                {% endif %}
+                                {% for line in section.lines %}
+                                    {% set card = line.oracleCard %}
+                                    {% set printing = line.printing %}
+                                    <tr class="group hover:bg-ink-800/60">
+                                        <td class="px-3 py-1.5 text-right font-semibold text-ink-300">{{ line.quantity }}</td>
+                                        <td class="max-w-[16rem] px-3 py-1.5">
+                                            <a href="{{ path('app_card_show', {id: card.id, impression: printing.id}) }}" data-turbo-frame="card_modal" class="block truncate text-ink-100 hover:text-neon-cyan">
+                                                {{ card.name }}{% if line.foil %} <span class="text-xs text-neon-fuchsia">foil</span>{% endif %}
+                                            </a>
+                                        </td>
+                                        <td class="hidden whitespace-nowrap px-3 py-1.5 text-xs md:table-cell">{{ card.manaCost|mana_symbols }}</td>
+                                        <td class="whitespace-nowrap px-3 py-1.5 text-xs text-ink-300">
+                                            <span class="inline-flex items-center gap-1.5">
+                                                <span class="h-2 w-2 rounded-full rarity-{{ printing.rarity.value }}" title="{{ printing.rarity.label }}"></span>
+                                                {{ printing.set.code|upper }} #{{ printing.collectorNumber }}
+                                            </span>
+                                        </td>
+                                        <td class="whitespace-nowrap px-3 py-1.5 text-right text-xs text-ink-300">{{ line.unitPrice is not null ? line.unitPrice|format_currency('EUR', locale: 'fr') : '—' }}</td>
+                                        <td class="whitespace-nowrap px-3 py-1.5 text-right text-white">{{ line.unitPrice is not null ? line.totalPrice|format_currency('EUR', locale: 'fr') : '—' }}</td>
+                                        <td class="whitespace-nowrap px-3 py-1.5">{{ include('collection/_line_buttons.html.twig') }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        {% endfor %}
+                    </table>
+                </div>
+            {% else %}
+                <div class="space-y-6">
+                    {% for section in sections %}
+                        <section>
+                            {% if section.label %}
+                                <div class="mb-3 border-b border-ink-800 pb-2">{{ include('collection/_section_header.html.twig') }}</div>
+                            {% endif %}
+                            <ul class="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
+                                {% for line in section.lines %}
+                                    {% set card = line.oracleCard %}
+                                    {% set printing = line.printing %}
+                                    <li class="group">
+                                        <a href="{{ path('app_card_show', {id: card.id, impression: printing.id}) }}" data-turbo-frame="card_modal" class="block focus-visible:outline-none">
+                                            <div class="card-tile relative aspect-[63/88] {{ line.foil ? 'ring-2 ring-neon-fuchsia/60' }}">
+                                                {% if printing.imageUri %}
+                                                    <img src="{{ printing.imageUri }}" alt="{{ card.name }}" loading="lazy" class="h-full w-full object-cover">
+                                                {% else %}
+                                                    <div class="grid h-full place-items-center p-3 text-center font-display text-ink-300">{{ card.name }}</div>
+                                                {% endif %}
+                                                {% if line.quantity > 1 %}
+                                                    <span class="absolute right-2 top-2 rounded-full bg-ink-950/85 px-2 py-0.5 text-xs font-bold text-white">× {{ line.quantity }}</span>
+                                                {% endif %}
+                                                {% if line.foil %}
+                                                    <span class="absolute left-2 top-2 rounded-full bg-neon-fuchsia/80 px-2 py-0.5 text-[0.65rem] font-bold uppercase text-white">Foil</span>
+                                                {% endif %}
+                                            </div>
+                                        </a>
+                                        <div class="mt-2 flex items-center gap-2">
+                                            <p class="min-w-0 flex-1 truncate text-sm font-semibold text-white">{{ card.name }}</p>
+                                            {{ include('collection/_line_buttons.html.twig') }}
+                                        </div>
+                                        <p class="flex items-center gap-1.5 text-xs text-ink-500">
+                                            <span class="h-2 w-2 rounded-full rarity-{{ printing.rarity.value }}"></span>
+                                            {{ printing.set.code|upper }} #{{ printing.collectorNumber }}
+                                            <span class="ml-auto text-ink-300">{{ line.unitPrice is not null ? line.unitPrice|format_currency('EUR', locale: 'fr') : '—' }}</span>
+                                        </p>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </section>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <aside data-loading="addClass(opacity-60)" class="transition-opacity">{{ include('collection/_sidebar.html.twig', {stats: this.stats}) }}</aside>
+</div>

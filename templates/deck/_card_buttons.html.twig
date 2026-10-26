@@ -1,0 +1,14 @@
+{# Boutons d'édition d'une ligne de deck (dans le composant DeckEditor).
+   Variables : deck_card, card, zone, zones, compact (sans les boutons de changement de zone, trop larges sous une vignette) #}
+<span class="flex shrink-0 items-center gap-0.5 opacity-60 transition group-hover:opacity-100 group-focus-within:opacity-100">
+    <button type="button" class="deck-btn" title="Retirer un exemplaire" aria-label="Retirer un exemplaire de {{ card.name }}"
+            data-action="live#action" data-live-action-param="changeQuantity" data-live-deck-card-id-param="{{ deck_card.id }}" data-live-delta-param="-1">−</button>
+    <button type="button" class="deck-btn" title="Ajouter un exemplaire" aria-label="Ajouter un exemplaire de {{ card.name }}"
+            data-action="live#action" data-live-action-param="changeQuantity" data-live-deck-card-id-param="{{ deck_card.id }}" data-live-delta-param="1">+</button>
+    {% for target in compact|default(false) ? [] : zones|filter(z => z != zone) %}
+        <button type="button" class="deck-btn w-auto px-1.5 text-[0.65rem] uppercase tracking-wider" title="Déplacer vers : {{ target.label }}"
+                data-action="live#action" data-live-action-param="move" data-live-deck-card-id-param="{{ deck_card.id }}" data-live-zone-param="{{ target.value }}">→ {{ target.label|slice(0, 4) }}</button>
+    {% endfor %}
+    <button type="button" class="deck-btn hover:text-mana-r" title="Retirer du deck" aria-label="Retirer {{ card.name }} du deck"
+            data-action="live#action" data-live-action-param="remove" data-live-deck-card-id-param="{{ deck_card.id }}">×</button>
+</span>

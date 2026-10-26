@@ -1,0 +1,89 @@
+<?php
+
+namespace App\Repository;
+
+use App\Entity\CardCollection;
+use App\Entity\CollectionCard;
+use App\Entity\OracleCard;
+use App\Entity\User;
+use Symfony\Bridge\Doctrine\Types\UuidType;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\Persistence\ManagerRegistry;
+
+/**
+ * @extends ServiceEntityRepository<CardCollection>
+ */
+class CardCollectionRepository extends ServiceEntityRepository
+{
+    public function __construct(ManagerRegistry $registry)
+    {
+        parent::__construct($registry, CardCollection::class);
+    }
+
+    /**
+     * Collection avec ses cartes, leurs impressions, éditions, données oracle et noms français, en une requête.
+     */
+    public function findWithCards(int $id): ?CardCollection
+    {
+        return $this->createQueryBuilder('c')
+            ->leftJoin('c.cards', 'cc')->addSelect('cc')
+            ->leftJoin('cc.printing', 'p')->addSelect('p')
+            ->leftJoin('p.set', 's')->addSelect('s')
+            ->leftJoin('p.oracleCard', 'o')->addSelect('o')
+            // Seule la traduction française est chargée (affichage et recherche par nom français)
+            ->leftJoin('o.localizations', 'l', 'WITH', 'l.lang = :lang')->addSelect('l')
+            ->where('c.id = :id')
+            ->setParameter('id', $id)
+            ->setParameter('lang', 'fr')
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    /**
+     * Collections d'un utilisateur avec leurs cartes (pour les vignettes : nombre, valeur, illustration).
+     *
+     * @return list<CardCollection>
+     */
+    public function findByOwnerWithCards(User $owner): array
+    {
+        return $this->createQueryBuilder('c')
+            ->leftJoin('c.cards', 'cc')->addSelect('cc')
+            ->leftJoin('cc.printing', 'p')->addSelect('p')
+            ->leftJoin('p.oracleCard', 'o')->addSelect('o')
+            ->where('c.owner = :owner')
+            ->setParameter('owner', $owner)
+            ->orderBy('c.updatedAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * @return list<CardCollection>
+     */
+    public function findByOwner(User $owner): array
+    {
+        return $this->findBy(['owner' => $owner], ['updatedAt' => 'DESC']);
+    }
+
+    /**
+     * Exemplaires d'une carte (toutes impressions confondues) possédés par un utilisateur, par collection.
+     *
+     * @return list<array{id: int, name: string, quantity: int}>
+     */
+    public function countCopiesOf(User $owner, OracleCard $card): array
+    {
+        return $this->getEntityManager()->createQueryBuilder()
+            ->select('c.id', 'c.name', 'SUM(cc.quantity) AS quantity')
+            ->from(CollectionCard::class, 'cc')
+            ->join('cc.collection', 'c')
+            ->join('cc.printing', 'p')
+            ->where('c.owner = :owner')
+            ->andWhere('p.oracleCard = :card')
+            ->setParameter('owner', $owner)
+            ->setParameter('card', $card->getId(), UuidType::NAME)
+            ->groupBy('c.id')
+            ->orderBy('c.name', 'ASC')
+            ->getQuery()
+            ->getArrayResult();
+    }
+}

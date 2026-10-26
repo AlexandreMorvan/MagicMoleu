@@ -9,6 +9,12 @@
                 </label>
             {% endfor %}
         </div>
+        {% if this.canToggleExtras %}
+            <label class="flex items-center gap-2 text-sm text-ink-100" title="Variantes d'illustration (sans bordure, showcase, extended art…), traitements foil spéciaux et promos">
+                <input type="checkbox" class="h-4 w-4 accent-neon-violet" data-model="extras">
+                Afficher les extras <span class="text-ink-500">({{ this.counts.extra }})</span>
+            </label>
+        {% endif %}
         <span data-loading class="h-4 w-4 animate-spin rounded-full border-2 border-neon-violet border-t-transparent" hidden></span>
         <select class="input ml-auto w-auto py-1.5 text-sm" data-model="sort" aria-label="Trier par">
             <option value="number">Numéro de collection</option>
@@ -38,6 +44,7 @@
                         </a>
                         <p class="flex items-center gap-1.5 text-xs text-ink-500">
                             <span class="h-2 w-2 rounded-full rarity-{{ printing.rarity.value }}"></span>#{{ printing.collectorNumber }}
+                            {% if printing.extra and this.hasMainCards %}<span class="ml-auto text-[0.65rem] font-semibold uppercase tracking-wider text-neon-fuchsia">Extra</span>{% endif %}
                         </p>
                     </li>
                 {% endfor %}

@@ -14,6 +14,9 @@ use App\Repository\NotificationRepository;
 use App\Scryfall\CardImporter;
 use App\Scryfall\JsonlReader;
 use App\Scryfall\SetCoverUpdater;
+use Symfony\Component\Console\Messenger\RunCommandMessage;
+use Symfony\Component\Lock\LockFactory;
+use Symfony\Component\Messenger\Transport\InMemory\InMemoryTransport;
 use Doctrine\ORM\EntityManagerInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -115,6 +118,73 @@ class AdminTest extends WebTestCase
 
         self::assertResponseRedirects();
         self::assertSame(1, self::getContainer()->get(NotificationRepository::class)->countUnreadFor($recipient));
+    }
+
+    public function testAdminCanLaunchScryfallSync(): void
+    {
+        $this->client->loginUser($this->admin);
+        $this->client->request('GET', '/admin');
+        $this->client->clickLink('Synchronisation');
+        self::assertResponseIsSuccessful();
+
+        $this->client->submitForm('Synchroniser');
+        self::assertResponseRedirects('/admin/scryfall');
+
+        // À lire avant la requête suivante, qui redémarre le noyau et vide le transport en mémoire
+        $sent = $this->asyncTransport()->getSent();
+        self::assertCount(1, $sent);
+        self::assertInstanceOf(RunCommandMessage::class, $sent[0]->getMessage());
+        // Premier formulaire de la page : les spoilers
+        self::assertSame('app:scryfall:sync-spoilers', $sent[0]->getMessage()->input);
+
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('body', 'lancée en arrière-plan');
+    }
+
+    public function testForcedBulkImportIsQueuedWithForceOption(): void
+    {
+        $this->client->loginUser($this->admin);
+        $crawler = $this->client->request('GET', '/admin/scryfall');
+        $form = $crawler->filter('form[action$="/cards"]')->form(['force' => '1']);
+        $this->client->submit($form);
+
+        self::assertResponseRedirects();
+        self::assertSame('app:scryfall:import-cards --force', $this->asyncTransport()->getSent()[0]->getMessage()->input);
+    }
+
+    public function testScryfallSyncIsRefusedWhileAnImportIsRunning(): void
+    {
+        $lock = self::getContainer()->get(LockFactory::class)->createLock('scryfall-import');
+        $lock->acquire();
+
+        try {
+            $this->client->loginUser($this->admin);
+            $crawler = $this->client->request('GET', '/admin/scryfall');
+            self::assertSelectorTextContains('.alert-info', 'import Scryfall est en cours');
+
+            $this->client->submit($crawler->filter('form[action$="/cards"]')->form());
+            self::assertCount(0, $this->asyncTransport()->getSent());
+
+            $this->client->followRedirect();
+            self::assertSelectorTextContains('body', 'déjà en cours');
+        } finally {
+            $lock->release();
+        }
+    }
+
+    public function testScryfallSyncRequiresCsrfToken(): void
+    {
+        $this->client->loginUser($this->admin);
+        $this->client->request('POST', '/admin/scryfall/cards', ['_token' => 'invalide']);
+
+        // Jeton invalide : refus géré par le pare-feu (redirection), rien n'est envoyé au worker
+        self::assertResponseRedirects();
+        self::assertCount(0, $this->asyncTransport()->getSent());
+    }
+
+    private function asyncTransport(): InMemoryTransport
+    {
+        return self::getContainer()->get('messenger.transport.async');
     }
 
     private function adminUrl(string $controller, string $action = 'index', ?string $entityId = null): string

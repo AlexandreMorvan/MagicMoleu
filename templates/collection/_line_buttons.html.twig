@@ -1,0 +1,9 @@
+{# Boutons de quantité d'une ligne de collection (dans le composant CollectionBrowser). Variables : line, card #}
+<span class="flex shrink-0 items-center gap-0.5 opacity-60 transition group-hover:opacity-100 group-focus-within:opacity-100">
+    <button type="button" class="deck-btn" title="Retirer un exemplaire" aria-label="Retirer un exemplaire de {{ card.name }}"
+            data-action="live#action" data-live-action-param="changeQuantity" data-live-line-id-param="{{ line.id }}" data-live-delta-param="-1">−</button>
+    <button type="button" class="deck-btn" title="Ajouter un exemplaire" aria-label="Ajouter un exemplaire de {{ card.name }}"
+            data-action="live#action" data-live-action-param="changeQuantity" data-live-line-id-param="{{ line.id }}" data-live-delta-param="1">+</button>
+    <button type="button" class="deck-btn hover:text-mana-r" title="Retirer de la collection" aria-label="Retirer {{ card.name }} de la collection"
+            data-action="live#action" data-live-action-param="remove" data-live-line-id-param="{{ line.id }}">×</button>
+</span>

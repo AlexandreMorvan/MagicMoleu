@@ -7,6 +7,8 @@ use App\Deck\DeckBuilder;
 use App\Entity\Deck;
 use App\Entity\DeckCard;
 use App\Entity\OracleCard;
+use App\Enum\DeckGrouping;
+use App\Enum\DeckView;
 use App\Enum\DeckZone;
 use App\Repository\DeckRepository;
 use App\Repository\OracleCardRepository;
@@ -21,6 +23,7 @@ use Symfony\UX\LiveComponent\Attribute\LiveArg;
 use Symfony\UX\LiveComponent\Attribute\LiveProp;
 use Symfony\UX\LiveComponent\ComponentToolsTrait;
 use Symfony\UX\LiveComponent\DefaultActionTrait;
+use Symfony\UX\LiveComponent\Metadata\UrlMapping;
 
 /**
  * Éditeur de deck : recherche de cartes à ajouter, quantités, zones. Chaque action est enregistrée immédiatement.
@@ -37,6 +40,12 @@ class DeckEditor extends AbstractController
 
     #[LiveProp(writable: true)]
     public string $query = '';
+
+    #[LiveProp(url: new UrlMapping(as: 'vue'))]
+    public DeckView $view = DeckView::List;
+
+    #[LiveProp(url: new UrlMapping(as: 'groupe'))]
+    public DeckGrouping $grouping = DeckGrouping::Type;
 
     private ?Deck $deck = null;
 
@@ -78,6 +87,18 @@ class DeckEditor extends AbstractController
     public function getZones(): array
     {
         return DeckZone::forFormat($this->getDeck()->getFormat());
+    }
+
+    #[LiveAction]
+    public function changeView(#[LiveArg] string $value): void
+    {
+        $this->view = DeckView::tryFrom($value) ?? DeckView::List;
+    }
+
+    #[LiveAction]
+    public function changeGrouping(#[LiveArg] string $value): void
+    {
+        $this->grouping = DeckGrouping::tryFrom($value) ?? DeckGrouping::Type;
     }
 
     #[LiveAction]

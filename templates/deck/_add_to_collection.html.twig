@@ -1,0 +1,24 @@
+{# Ajout de toutes les cartes jouées d'un deck à une collection. Variables : deck, collections (celles de l'utilisateur) #}
+{% set count = deck.cardCount %}
+<section class="panel mt-4 p-5">
+    <h3 class="font-sans text-xs font-semibold uppercase tracking-widest text-ink-500">Ajouter à une collection</h3>
+    {% if not app.user %}
+        <p class="mt-2 text-sm text-ink-300">
+            <a href="{{ path('app_login') }}" class="font-semibold text-neon-cyan hover:underline">Connecte-toi</a> pour ajouter les cartes de ce deck à ta collection.
+        </p>
+    {% elseif count == 0 %}
+        <p class="mt-2 text-sm text-ink-500">Ce deck ne contient aucune carte.</p>
+    {% else %}
+        <form method="post" action="{{ path('app_collection_add_deck', {deckId: deck.id}) }}" class="mt-2 space-y-2">
+            <input type="hidden" name="_token" value="{{ csrf_token('add-deck-to-collection') }}">
+            <select name="collection" class="input py-1.5 text-sm" aria-label="Collection">
+                {% for collection in collections %}
+                    <option value="{{ collection.id }}">{{ collection.name }}</option>
+                {% endfor %}
+                <option value="">+ Nouvelle collection « {{ deck.name|length > 40 ? deck.name|slice(0, 40) ~ '…' : deck.name }} »</option>
+            </select>
+            <button type="submit" class="btn btn-primary w-full">Ajouter les {{ count }} carte{{ count > 1 ? 's' }}</button>
+            <p class="text-xs text-ink-500">Commandant, deck principal et réserve, avec les impressions choisies dans le deck.</p>
+        </form>
+    {% endif %}
+</section>

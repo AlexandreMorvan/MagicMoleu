@@ -22,7 +22,9 @@
             {route: 'app_set_index', label: 'Éditions', active: ['app_set_index', 'app_set_show']},
             {route: 'app_deck_index', label: 'Decks', active: ['app_deck_index']},
             {route: 'app_spoilers', label: 'Spoilers', active: ['app_spoilers']},
-        ] %}
+        ]|merge(app.user ? [
+            {route: 'app_collection_index', label: 'Collection', active: ['app_collection_index', 'app_collection_show', 'app_collection_new', 'app_collection_settings']},
+        ] : []) %}
         <header class="sticky top-0 z-40 border-b border-ink-800 bg-ink-950/80 backdrop-blur-md">
             <nav class="mx-auto flex h-16 max-w-7xl items-center gap-6 px-4 sm:px-6">
                 <a href="{{ path('app_home') }}" class="group flex items-center gap-2">
@@ -83,7 +85,8 @@
         <dialog class="card-modal m-auto w-[min(64rem,calc(100vw-2rem))] max-h-[calc(100vh-2rem)] overflow-y-auto rounded-2xl border border-ink-700 bg-ink-850 p-0 text-ink-100 shadow-2xl shadow-black/60"
                 aria-labelledby="card-modal-title"
                 data-controller="modal"
-                data-action="turbo:frame-load->modal#open close->modal#clear click->modal#closeOnBackdrop">
+                data-modal-version-value="{{ build_version }}"
+                data-action="turbo:before-fetch-request->modal#addVersion turbo:frame-load->modal#open close->modal#clear click->modal#closeOnBackdrop">
             <div class="relative p-6 sm:p-8">
                 <button type="button" class="absolute right-3 top-3 z-10 grid h-9 w-9 place-items-center rounded-full text-xl text-ink-300 transition hover:bg-ink-800 hover:text-white"
                         aria-label="Fermer" data-action="modal#close" data-modal-target="closeButton">×</button>
