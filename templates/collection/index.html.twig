@@ -1,0 +1,39 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Collections{% endblock %}
+
+{% block body %}
+    <div class="flex flex-wrap items-center justify-between gap-4">
+        <h1 class="text-3xl uppercase">Mes collections</h1>
+        <a href="{{ path('app_collection_new') }}" class="btn btn-primary">+ Nouvelle collection</a>
+    </div>
+
+    {% if collections is empty %}
+        <div class="panel mt-8 border-dashed p-10 text-center text-ink-300">
+            Tu n'as pas encore de collection. <a href="{{ path('app_collection_new') }}" class="font-semibold text-neon-cyan hover:underline">Crée la première</a>,
+            ou ajoute une carte depuis sa fiche (recherche, éditions, spoilers) ou tout un deck depuis sa page.
+        </div>
+    {% else %}
+        <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {% for collection in collections %}
+                {% set cover = collection.coverCard %}
+                {% set stats = collection_stats(collection) %}
+                <a href="{{ path('app_collection_show', {id: collection.id}) }}" class="panel group block overflow-hidden transition hover:border-neon-violet/60 hover:shadow-glow">
+                    <div class="relative h-28 bg-ink-800">
+                        {% if cover and cover.artCropUri %}
+                            <img src="{{ cover.artCropUri }}" alt="" loading="lazy" class="h-full w-full object-cover opacity-70 transition group-hover:opacity-90">
+                        {% endif %}
+                        <div class="absolute inset-0 bg-gradient-to-t from-ink-850 to-transparent"></div>
+                        <span class="badge absolute left-3 top-3 border-white/20 bg-ink-950/60 text-white">{{ stats.value|format_currency('EUR', {fraction_digit: 0}, locale: 'fr') }}</span>
+                    </div>
+                    <div class="p-4">
+                        <p class="truncate font-display text-lg font-bold text-white">{{ collection.name }}</p>
+                        <p class="text-xs text-ink-500">
+                            {{ stats.cardCount }} carte{{ stats.cardCount > 1 ? 's' }} · modifiée le {{ collection.updatedAt|format_date('short', locale: 'fr') }}
+                        </p>
+                    </div>
+                </a>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endblock %}

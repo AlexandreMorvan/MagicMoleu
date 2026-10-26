@@ -1,0 +1,14 @@
+{# En-tête d'une section de collection (édition, tranche de prix ou rareté). Variable : section #}
+<div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+    {% if section.set %}
+        {% if section.set.iconSvgUri %}<img src="{{ section.set.iconSvgUri }}" alt="" class="h-5 w-5 shrink-0 invert" loading="lazy">{% endif %}
+        <a href="{{ path('app_set_show', {code: section.set.code}) }}" class="font-display text-lg font-bold uppercase tracking-wide text-white hover:text-neon-cyan">{{ section.label }}</a>
+        <span class="text-xs text-ink-500">{{ section.set.code|upper }}{{ section.set.releasedAt ? ' · ' ~ section.set.releasedAt|date('Y') }}</span>
+    {% else %}
+        {% if this.sort == 'rarity' %}<span class="h-2.5 w-2.5 rounded-full rarity-{{ section.key }}"></span>{% endif %}
+        <span class="font-display text-lg font-bold uppercase tracking-wide text-white">{{ section.label }}</span>
+    {% endif %}
+    <span class="ml-auto text-xs font-normal normal-case tracking-normal text-ink-300">
+        {{ section.count }} carte{{ section.count > 1 ? 's' }}{% if section.value > 0 %} · {{ section.value|format_currency('EUR', locale: 'fr') }}{% endif %}
+    </span>
+</div>

@@ -79,6 +79,24 @@ class SpoilerAndSetPagesTest extends WebTestCase
         self::assertStringNotContainsString('Lightning Bolt', $html);
     }
 
+    public function testSetExtrasAreHiddenByDefault(): void
+    {
+        // Variante sans bordure de Lightning Bolt, numérotée après la liste principale
+        $bolt = array_find(self::upcomingCards(), static fn (array $c) => 'Lightning Bolt' === $c['name']);
+        self::getContainer()->get(CardImporter::class)->import([array_merge($bolt, [
+            'id' => '00000000-0000-4000-9000-000000000300', 'collector_number' => '300',
+            'border_color' => 'borderless', 'promo_types' => ['boosterfun'],
+        ])]);
+
+        $crawler = $this->client->request('GET', '/editions/tst');
+        self::assertSame(['#1', '#2', '#10'], $crawler->filter('li p.text-xs')->each(fn ($p) => trim($p->text())), 'extras masqués par défaut');
+        self::assertSelectorTextContains('main label[title^="Variantes"]', 'Afficher les extras (1)');
+
+        $set = self::getContainer()->get(EntityManagerInterface::class)->getRepository(\App\Entity\MtgSet::class)->findOneBy(['code' => 'tst']);
+        $crawler = $this->createLiveComponent(SetCards::class, ['set' => $set], $this->client)->set('extras', true)->render()->crawler();
+        self::assertSame(['#1', '#2', '#10', '#300 Extra'], $crawler->filter('li p.text-xs')->each(fn ($p) => trim(preg_replace('/\s+/', ' ', $p->text()))));
+    }
+
     public function testUnknownSetIs404(): void
     {
         $this->client->request('GET', '/editions/zzzz');

@@ -7,7 +7,10 @@ use App\Deck\DeckExporter;
 use App\Deck\DeckImporter;
 use App\Entity\Deck;
 use App\Entity\User;
+use App\Enum\DeckGrouping;
+use App\Enum\DeckView;
 use App\Form\DeckType;
+use App\Repository\CardCollectionRepository;
 use App\Repository\DeckRepository;
 use App\Security\DeckVoter;
 use Doctrine\ORM\EntityManagerInterface;
@@ -15,6 +18,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Requirement\Requirement;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
@@ -60,12 +64,23 @@ class DeckController extends AbstractController
     }
 
     #[Route('/{id}', name: 'app_deck_show', requirements: ['id' => Requirement::DIGITS], methods: ['GET'])]
-    public function show(int $id): Response
-    {
+    public function show(
+        int $id,
+        #[CurrentUser] ?User $user,
+        CardCollectionRepository $collections,
+        #[MapQueryParameter] DeckView $vue = DeckView::List,
+        #[MapQueryParameter] DeckGrouping $groupe = DeckGrouping::Type,
+    ): Response {
         $deck = $this->findDeck($id);
         $this->denyAccessUnlessGranted(DeckVoter::VIEW, $deck);
 
-        return $this->render('deck/show.html.twig', ['deck' => $deck]);
+        return $this->render('deck/show.html.twig', [
+            'deck' => $deck,
+            'view' => $vue,
+            'grouping' => $groupe,
+            // Pour « ajouter toutes les cartes à une collection »
+            'collections' => $user ? $collections->findByOwner($user) : [],
+        ]);
     }
 
     /**

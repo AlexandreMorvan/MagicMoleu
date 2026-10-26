@@ -19,6 +19,9 @@ final class CardMapper
     /** Traitements d'illustration qu'on évite pour l'image « par défaut » d'une carte. */
     private const array FANCY_FRAME_EFFECTS = ['showcase', 'extendedart', 'etched', 'inverted', 'fullart'];
 
+    /** Types de promo désignant un traitement spécial (en plus de tous les « …foil »), pas un simple produit d'origine. */
+    private const array TREATMENT_PROMO_TYPES = ['boosterfun', 'serialized', 'poster', 'textured', 'gilded', 'oilslick', 'neonink', 'stepandcompleat', 'concept', 'embossed', 'invisibleink'];
+
     /**
      * @param array<string, mixed> $card
      */
@@ -106,6 +109,7 @@ final class CardMapper
                 'digital' => $card['digital'] ?? false,
                 'frame' => $card['frame'] ?? '',
                 'border_color' => $card['border_color'] ?? '',
+                'extra' => $this->isExtra($card),
                 'scryfall_uri' => $card['scryfall_uri'] ?? '',
                 // Écrit seulement à l'insertion, puis remplacé par la date d'aperçu si elle apparaît (voir CardImporter)
                 'revealed_at' => $card['preview']['previewed_at'] ?? date('Y-m-d'),
@@ -143,6 +147,27 @@ final class CardMapper
             && !\in_array($card['set_type'], ['memorabilia', 'funny', 'promo'], true);
 
         return ($classic ? 100_000_000 : 0) + (int) str_replace('-', '', $card['released_at']);
+    }
+
+    /**
+     * Impression « extra » d'une édition : variante d'illustration ou de traitement (sans bordure, showcase,
+     * extended art, foil spécial, numérotée…) ou promo, par opposition aux cartes de la liste principale.
+     *
+     * @param array<string, mixed> $card
+     */
+    private function isExtra(array $card): bool
+    {
+        $promoTypes = $card['promo_types'] ?? [];
+
+        return ($card['promo'] ?? false)
+            || ($card['variation'] ?? false)
+            || ($card['textless'] ?? false)
+            || 'borderless' === ($card['border_color'] ?? null)
+            || array_intersect($card['frame_effects'] ?? [], self::FANCY_FRAME_EFFECTS)
+            // Les terrains de base full-art font souvent partie de la liste principale
+            || (($card['full_art'] ?? false) && !str_contains($card['type_line'] ?? '', 'Basic Land'))
+            || array_intersect($promoTypes, self::TREATMENT_PROMO_TYPES)
+            || array_filter($promoTypes, static fn (string $type) => str_ends_with($type, 'foil'));
     }
 
     /**

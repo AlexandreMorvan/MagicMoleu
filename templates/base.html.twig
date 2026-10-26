@@ -22,7 +22,9 @@
             {route: 'app_set_index', label: 'Éditions', active: ['app_set_index', 'app_set_show']},
             {route: 'app_deck_index', label: 'Decks', active: ['app_deck_index']},
             {route: 'app_spoilers', label: 'Spoilers', active: ['app_spoilers']},
-        ] %}
+        ]|merge(app.user ? [
+            {route: 'app_collection_index', label: 'Collection', active: ['app_collection_index', 'app_collection_show', 'app_collection_new', 'app_collection_settings']},
+        ] : []) %}
         <header class="sticky top-0 z-40 border-b border-ink-800 bg-ink-950/80 backdrop-blur-md">
             <nav class="mx-auto flex h-16 max-w-7xl items-center gap-6 px-4 sm:px-6">
                 <a href="{{ path('app_home') }}" class="group flex items-center gap-2">

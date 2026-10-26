@@ -85,6 +85,10 @@ class CardPrinting
     #[ORM\Column(length: 255)]
     private string $scryfallUri = '';
 
+    /** Variante d'illustration ou de traitement, ou promo : masquée par défaut dans la liste d'une édition. */
+    #[ORM\Column(options: ['default' => false])]
+    private bool $extra = false;
+
     /**
      * Date de révélation : celle de l'aperçu officiel si Scryfall la connaît,
      * sinon le jour où l'import a vu la carte pour la première fois.
@@ -195,6 +199,19 @@ class CardPrinting
         return $this->finishes;
     }
 
+    public function hasFoil(): bool
+    {
+        return \in_array('foil', $this->finishes, true);
+    }
+
+    /**
+     * Impression qui n'existe qu'en foil (certaines cartes de decks Commander, promos…).
+     */
+    public function isFoilOnly(): bool
+    {
+        return $this->hasFoil() && !\in_array('nonfoil', $this->finishes, true);
+    }
+
     public function getReleasedAt(): \DateTimeImmutable
     {
         return $this->releasedAt;
@@ -228,6 +245,11 @@ class CardPrinting
     public function getScryfallUri(): string
     {
         return $this->scryfallUri;
+    }
+
+    public function isExtra(): bool
+    {
+        return $this->extra;
     }
 
     public function getRevealedAt(): \DateTimeImmutable

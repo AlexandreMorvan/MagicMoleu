@@ -1,7 +1,8 @@
-{# Liste des cartes d'un deck par zone puis par catégorie.
-   Variables : deck, zones, editable (boutons d'édition, dans le composant DeckEditor) #}
+{# Cartes d'un deck par zone puis par groupe (type, couleur ou CCM), en liste, en vignettes ou en tableau détaillé.
+   Variables : deck, zones, editable (boutons d'édition, dans le composant DeckEditor),
+               view (DeckView), grouping (DeckGrouping) #}
 {% for zone in zones %}
-    {% set groups = deck_groups(deck, zone) %}
+    {% set groups = deck_groups(deck, zone, grouping) %}
     {% if groups is not empty or (editable and zone.value in ['main', 'commander']) %}
         <section class="panel p-4 sm:p-5">
             <h2 class="flex items-baseline gap-2 text-lg uppercase">
@@ -15,34 +16,85 @@
                 </p>
             {% endif %}
 
-            <div class="mt-3 gap-x-8 {{ editable ? '' : 'sm:columns-2' }}">
+            <div class="mt-3 gap-x-8 {{ view.value == 'liste' and not editable ? 'sm:columns-2' }}">
                 {% for group in groups %}
                     <div class="mb-4 break-inside-avoid">
-                        <h3 class="mb-1 font-sans text-xs font-semibold uppercase tracking-widest text-ink-500">{{ group.category.label }} ({{ group.count }})</h3>
-                        <ul>
-                            {% for deck_card in group.cards %}
-                                {% set card = deck_card.oracleCard %}
-                                <li class="group flex items-center gap-2 rounded-md px-1.5 py-1 text-sm hover:bg-ink-800/70">
-                                    <span class="w-5 shrink-0 text-right font-semibold text-ink-300">{{ deck_card.quantity }}</span>
-                                    <a href="{{ path('app_card_show', {id: card.id}) }}" data-turbo-frame="card_modal" class="min-w-0 flex-1 truncate text-ink-100 hover:text-neon-cyan">{{ card.name }}</a>
-                                    <span class="shrink-0 whitespace-nowrap text-xs">{{ card.manaCost|mana_symbols }}</span>
-                                    {% if editable %}
-                                        <span class="flex shrink-0 items-center gap-0.5 opacity-60 transition group-hover:opacity-100 group-focus-within:opacity-100">
-                                            <button type="button" class="deck-btn" title="Retirer un exemplaire" aria-label="Retirer un exemplaire de {{ card.name }}"
-                                                    data-action="live#action" data-live-action-param="changeQuantity" data-live-deck-card-id-param="{{ deck_card.id }}" data-live-delta-param="-1">−</button>
-                                            <button type="button" class="deck-btn" title="Ajouter un exemplaire" aria-label="Ajouter un exemplaire de {{ card.name }}"
-                                                    data-action="live#action" data-live-action-param="changeQuantity" data-live-deck-card-id-param="{{ deck_card.id }}" data-live-delta-param="1">+</button>
-                                            {% for target in zones|filter(z => z != zone) %}
-                                                <button type="button" class="deck-btn w-auto px-1.5 text-[0.65rem] uppercase tracking-wider" title="Déplacer vers : {{ target.label }}"
-                                                        data-action="live#action" data-live-action-param="move" data-live-deck-card-id-param="{{ deck_card.id }}" data-live-zone-param="{{ target.value }}">→ {{ target.label|slice(0, 4) }}</button>
-                                            {% endfor %}
-                                            <button type="button" class="deck-btn hover:text-mana-r" title="Retirer du deck" aria-label="Retirer {{ card.name }} du deck"
-                                                    data-action="live#action" data-live-action-param="remove" data-live-deck-card-id-param="{{ deck_card.id }}">×</button>
-                                        </span>
-                                    {% endif %}
-                                </li>
-                            {% endfor %}
-                        </ul>
+                        <h3 class="mb-1 flex items-center gap-1.5 font-sans text-xs font-semibold uppercase tracking-widest text-ink-500">
+                            {% if group.symbol %}{{ group.symbol|mana_symbols }}{% endif %}
+                            {{ grouping.value == 'ccm' and group.key != 'land' ? 'CCM ' }}{{ group.label }} ({{ group.count }})
+                        </h3>
+
+                        {% if view.value == 'visuelle' %}
+                            <ul class="grid grid-cols-3 gap-3 sm:grid-cols-4 {{ editable ? 'xl:grid-cols-5' : 'lg:grid-cols-6' }}">
+                                {% for deck_card in group.cards %}
+                                    {% set card = deck_card.oracleCard %}
+                                    <li class="group">
+                                        <a href="{{ path('app_card_show', {id: card.id, impression: deck_card.printing.id ?? null}) }}" data-turbo-frame="card_modal" class="block focus-visible:outline-none">
+                                            <div class="card-tile relative aspect-[63/88] group-focus-visible:shadow-glow-cyan">
+                                                {% if deck_card.imageUri %}
+                                                    <img src="{{ deck_card.imageUri }}" alt="{{ card.name }}" loading="lazy" class="h-full w-full object-cover">
+                                                {% else %}
+                                                    <div class="grid h-full place-items-center p-2 text-center font-display text-sm text-ink-300">{{ card.name }}</div>
+                                                {% endif %}
+                                                {% if deck_card.quantity > 1 %}
+                                                    <span class="absolute right-1.5 top-1.5 rounded-full bg-ink-950/85 px-2 py-0.5 text-xs font-bold text-white">× {{ deck_card.quantity }}</span>
+                                                {% endif %}
+                                            </div>
+                                        </a>
+                                        {% if editable %}
+                                            <div class="mt-1 flex justify-center">{{ include('deck/_card_buttons.html.twig', {compact: true}) }}</div>
+                                        {% endif %}
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% elseif view.value == 'detaillee' %}
+                            <div class="overflow-x-auto">
+                                <table class="w-full table-fixed text-sm">
+                                    <tbody class="divide-y divide-ink-800">
+                                        {% for deck_card in group.cards %}
+                                            {% set card = deck_card.oracleCard %}
+                                            {% set printing = deck_card.printing %}
+                                            {% set fr = card.localization('fr') %}
+                                            <tr class="group hover:bg-ink-800/60">
+                                                <td class="w-8 px-1.5 py-1.5 text-right font-semibold text-ink-300">{{ deck_card.quantity }}</td>
+                                                <td class="px-2 py-1.5">
+                                                    <a href="{{ path('app_card_show', {id: card.id, impression: printing.id ?? null}) }}" data-turbo-frame="card_modal" class="block truncate text-ink-100 hover:text-neon-cyan">{{ card.name }}</a>
+                                                    {% if fr and fr.printedName != card.name %}<span class="block truncate text-xs text-ink-500">{{ fr.printedName }}</span>{% endif %}
+                                                </td>
+                                                <td class="w-20 whitespace-nowrap px-2 py-1.5 text-xs">{{ card.manaCost|mana_symbols }}</td>
+                                                <td class="hidden w-[25%] truncate px-2 py-1.5 text-xs text-ink-300 {{ editable ? '2xl:table-cell' : 'md:table-cell' }}">{{ card.typeLine }}</td>
+                                                <td class="hidden w-28 whitespace-nowrap px-2 py-1.5 text-xs text-ink-300 sm:table-cell">
+                                                    {% if printing %}
+                                                        <span class="inline-flex items-center gap-1.5">
+                                                            <span class="h-2 w-2 rounded-full rarity-{{ printing.rarity.value }}" title="{{ printing.rarity.label }}"></span>
+                                                            {{ printing.set.code|upper }} #{{ printing.collectorNumber }}
+                                                        </span>
+                                                    {% endif %}
+                                                </td>
+                                                <td class="w-20 whitespace-nowrap px-2 py-1.5 text-right text-xs text-ink-300">
+                                                    {{ deck_card.unitPrice is not null ? (deck_card.unitPrice * deck_card.quantity)|format_currency('EUR', locale: 'fr') : '—' }}
+                                                </td>
+                                                {% if editable %}
+                                                    <td class="w-40 whitespace-nowrap px-1.5 py-1.5">{{ include('deck/_card_buttons.html.twig') }}</td>
+                                                {% endif %}
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <ul>
+                                {% for deck_card in group.cards %}
+                                    {% set card = deck_card.oracleCard %}
+                                    <li class="group flex items-center gap-2 rounded-md px-1.5 py-1 text-sm hover:bg-ink-800/70">
+                                        <span class="w-5 shrink-0 text-right font-semibold text-ink-300">{{ deck_card.quantity }}</span>
+                                        <a href="{{ path('app_card_show', {id: card.id}) }}" data-turbo-frame="card_modal" class="min-w-0 flex-1 truncate text-ink-100 hover:text-neon-cyan">{{ card.name }}</a>
+                                        <span class="shrink-0 whitespace-nowrap text-xs">{{ card.manaCost|mana_symbols }}</span>
+                                        {% if editable %}{{ include('deck/_card_buttons.html.twig') }}{% endif %}
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
                     </div>
                 {% endfor %}
             </div>

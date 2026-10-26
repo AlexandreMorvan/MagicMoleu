@@ -1,0 +1,86 @@
+{# Statistiques d'une collection. Variable : stats (App\Collection\CollectionStats) #}
+<section class="panel p-5">
+    <dl class="grid grid-cols-2 gap-4 text-center">
+        <div>
+            <dt class="text-[0.65rem] uppercase tracking-widest text-ink-500">Valeur</dt>
+            <dd class="font-display text-2xl font-bold text-white">{{ stats.value|format_currency('EUR', locale: 'fr') }}</dd>
+        </div>
+        <div>
+            <dt class="text-[0.65rem] uppercase tracking-widest text-ink-500">Cartes</dt>
+            <dd class="font-display text-2xl font-bold text-white">{{ stats.cardCount|format_number(locale: 'fr') }}</dd>
+        </div>
+        <div>
+            <dt class="text-[0.65rem] uppercase tracking-widest text-ink-500">Cartes uniques</dt>
+            <dd class="font-display text-xl font-bold text-white">{{ stats.uniqueCount|format_number(locale: 'fr') }}</dd>
+        </div>
+        <div>
+            <dt class="text-[0.65rem] uppercase tracking-widest text-ink-500">Prix moyen</dt>
+            <dd class="font-display text-xl font-bold text-white">{{ stats.averageValue is not null ? stats.averageValue|format_currency('EUR', locale: 'fr') : '—' }}</dd>
+        </div>
+    </dl>
+    {% if stats.foilCount or stats.unpricedCount %}
+        <p class="mt-3 text-center text-xs text-ink-500">
+            {% if stats.foilCount %}{{ stats.foilCount }} foil{{ stats.foilCount > 1 ? 's' }}{% endif %}
+            {% if stats.foilCount and stats.unpricedCount %} · {% endif %}
+            {% if stats.unpricedCount %}{{ stats.unpricedCount }} sans prix connu{% endif %}
+        </p>
+    {% endif %}
+
+    {% if stats.rarities is not empty %}
+        <h3 class="mt-6 font-sans text-xs font-semibold uppercase tracking-widest text-ink-500">Raretés</h3>
+        <ul class="mt-2 space-y-1.5 text-sm">
+            {% for row in stats.rarities %}
+                <li class="flex items-center gap-2 text-ink-300">
+                    <span class="h-2.5 w-2.5 shrink-0 rounded-full rarity-{{ row.rarity.value }}"></span>
+                    <span class="flex-1">{{ row.rarity.label }}</span>
+                    <span class="text-white">{{ row.count }}</span>
+                    <span class="w-20 text-right text-xs text-ink-500">{{ row.value|format_currency('EUR', {fraction_digit: 0}, locale: 'fr') }}</span>
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    {% if stats.colors is not empty %}
+        <h3 class="mt-6 font-sans text-xs font-semibold uppercase tracking-widest text-ink-500">Couleurs</h3>
+        <div class="mt-2 flex h-3 overflow-hidden rounded-full bg-ink-800">
+            {% for row in stats.colors %}
+                <div class="{{ row.group.cssClass }}" style="width: {{ (row.count / stats.cardCount * 100)|round(1) }}%" title="{{ row.group.label }} : {{ row.count }}"></div>
+            {% endfor %}
+        </div>
+        <ul class="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-ink-300">
+            {% for row in stats.colors %}
+                <li class="flex items-center gap-1">
+                    {% if row.group.symbol %}{{ row.group.symbol|mana_symbols }}{% else %}<span class="h-2.5 w-2.5 rounded-full {{ row.group.cssClass }}"></span>{% endif %}
+                    {{ row.group.label }} {{ row.count }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    {% if stats.mostValuable is not empty %}
+        <h3 class="mt-6 font-sans text-xs font-semibold uppercase tracking-widest text-ink-500">Cartes les plus chères</h3>
+        <ol class="mt-2 space-y-1 text-sm">
+            {% for line in stats.mostValuable %}
+                <li class="flex items-center gap-2">
+                    <a href="{{ path('app_card_show', {id: line.oracleCard.id, impression: line.printing.id}) }}" data-turbo-frame="card_modal" class="min-w-0 flex-1 truncate text-ink-100 hover:text-neon-cyan">
+                        {{ line.oracleCard.name }}{% if line.foil %} <span class="text-xs text-neon-fuchsia">foil</span>{% endif %}
+                    </a>
+                    <span class="shrink-0 text-xs text-ink-300">{{ line.unitPrice|format_currency('EUR', locale: 'fr') }}</span>
+                </li>
+            {% endfor %}
+        </ol>
+    {% endif %}
+
+    {% if stats.sets is not empty %}
+        <h3 class="mt-6 font-sans text-xs font-semibold uppercase tracking-widest text-ink-500">Éditions principales</h3>
+        <ul class="mt-2 space-y-1 text-sm">
+            {% for set in stats.sets %}
+                <li class="flex items-center gap-2 text-ink-300">
+                    {% if set.iconSvgUri %}<img src="{{ set.iconSvgUri }}" alt="" class="h-4 w-4 shrink-0 invert" loading="lazy">{% endif %}
+                    <a href="{{ path('app_set_show', {code: set.code}) }}" class="min-w-0 flex-1 truncate hover:text-neon-cyan">{{ set.name }}</a>
+                    <span class="text-white">{{ set.count }}</span>
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+</section>

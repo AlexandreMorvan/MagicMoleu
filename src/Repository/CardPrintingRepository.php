@@ -78,14 +78,14 @@ class CardPrintingRepository extends ServiceEntityRepository
     private const string RARITY_ORDER = "CASE p.rarity WHEN 'common' THEN 0 WHEN 'uncommon' THEN 1 WHEN 'rare' THEN 2 WHEN 'mythic' THEN 3 ELSE 4 END";
 
     /**
-     * Cartes d'une édition, filtrées par rareté et couleurs.
+     * Cartes d'une édition, filtrées par rareté et couleurs, avec ou sans les extras (variantes, promos).
      *
      * @param list<string> $rarities
      * @param string       $sort     number (numéro de collection), name ou rarity
      *
      * @return list<CardPrinting>
      */
-    public function findBySet(MtgSet $set, array $rarities = [], int $colorMask = 0, bool $colorless = false, string $sort = 'number', int $limit = 120): array
+    public function findBySet(MtgSet $set, array $rarities = [], int $colorMask = 0, bool $colorless = false, string $sort = 'number', int $limit = 120, bool $extras = true): array
     {
         $qb = $this->createQueryBuilder('p')
             ->join('p.oracleCard', 'o')
@@ -93,6 +93,10 @@ class CardPrintingRepository extends ServiceEntityRepository
             ->where('p.set = :set')
             ->setParameter('set', $set->getId(), UuidType::NAME)
             ->setMaxResults($limit);
+
+        if (!$extras) {
+            $qb->andWhere('p.extra = false');
+        }
 
         if ($rarities) {
             $qb->andWhere('p.rarity IN (:rarities)')->setParameter('rarities', $rarities);
@@ -107,6 +111,29 @@ class CardPrintingRepository extends ServiceEntityRepository
         };
 
         return $qb->getQuery()->getResult();
+    }
+
+    /**
+     * Nombre d'impressions d'une édition dans sa liste principale et en extras.
+     *
+     * @return array{main: int, extra: int}
+     */
+    public function countMainAndExtrasBySet(MtgSet $set): array
+    {
+        $rows = $this->createQueryBuilder('p')
+            ->select('p.extra', 'COUNT(p.id) AS cards')
+            ->where('p.set = :set')
+            ->setParameter('set', $set->getId(), UuidType::NAME)
+            ->groupBy('p.extra')
+            ->getQuery()
+            ->getArrayResult();
+
+        $counts = ['main' => 0, 'extra' => 0];
+        foreach ($rows as $row) {
+            $counts[$row['extra'] ? 'extra' : 'main'] = (int) $row['cards'];
+        }
+
+        return $counts;
     }
 
     /** Types d'éditions exclus des spoilers : jetons, produits dérivés, promos, cartes numériques. */

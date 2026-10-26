@@ -1,0 +1,27 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ collection.name }}{% endblock %}
+
+{% block body %}
+    {% set cover = collection.coverCard %}
+    <header class="relative mb-8 overflow-hidden rounded-2xl border border-ink-800 bg-ink-850">
+        {% if cover and cover.artCropUri %}
+            <img src="{{ cover.artCropUri }}" alt="" class="absolute inset-0 h-full w-full object-cover opacity-30">
+        {% endif %}
+        <div class="absolute inset-0 bg-gradient-to-r from-ink-950 via-ink-950/80 to-transparent"></div>
+        <div class="relative flex flex-wrap items-end justify-between gap-4 p-6 sm:p-8">
+            <div>
+                <p class="badge border-neon-violet/50 text-neon-violet">Collection</p>
+                <h1 class="mt-3 text-3xl uppercase sm:text-4xl">{{ collection.name }}</h1>
+                <p class="mt-1 text-sm text-ink-300">modifiée le {{ collection.updatedAt|format_datetime('medium', 'short', locale: 'fr') }}</p>
+                {% if collection.description %}<p class="mt-3 max-w-2xl text-ink-100">{{ collection.description|nl2br }}</p>{% endif %}
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <a href="{{ path('app_collection_settings', {id: collection.id}) }}" class="btn btn-ghost">Paramètres</a>
+                <a href="{{ path('app_card_search') }}" class="btn btn-primary">+ Ajouter des cartes</a>
+            </div>
+        </div>
+    </header>
+
+    <twig:CollectionBrowser collectionId="{{ collection.id }}" />
+{% endblock %}

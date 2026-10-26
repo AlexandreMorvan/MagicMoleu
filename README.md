@@ -61,11 +61,29 @@ bin/console debug:scheduler   # prochaines exécutions
 - `OracleCard` : la carte en tant que règle (oracle_id Scryfall) ; couleurs et identité couleur en **bitmask WUBRG**
   (`App\Enum\Color`), ce qui permet de tester l'identité Commander en SQL : `color_identity & ~:mask = 0`.
 - `CardFace` : faces des cartes multi-faces (transform, MDFC, split, adventure…).
-- `CardPrinting` : une impression (édition, numéro, langue, images, prix).
+- `CardPrinting` : une impression (édition, numéro, langue, images, prix). Le drapeau `extra` (variante sans bordure,
+  showcase, extended art, traitement foil spécial, promo…) est calculé à l'import ; ces cartes sont masquées par défaut
+  sur la page d'une édition (case « Afficher les extras »).
 - `MtgSet`, `CardLegality` (format × statut), `CardLocalization` (noms/textes traduits), `User`.
+- `CardCollection` / `CollectionCard` : collections privées d'un utilisateur ; une ligne par impression et finition (normale / foil).
 
 Les identifiants Scryfall servent de clés primaires (BINARY(16)) ; l'import écrit via DBAL par lots
 (`INSERT … ON DUPLICATE KEY UPDATE`), il est donc idempotent.
+
+## Collections
+
+Section « Collection » (utilisateurs connectés) : plusieurs collections par utilisateur, vues en vignettes ou en liste,
+filtres (nom, rareté, couleur), classement (par édition, tranche de prix ou rareté : sous des en-têtes avec nombre de
+cartes et valeur) et statistiques (valeur en euros, normale ou foil selon l'exemplaire, cartes uniques,
+raretés, couleurs, cartes les plus chères, éditions principales).
+
+- **Ajout d'une carte** : depuis sa fiche (modale de la recherche, des éditions, des spoilers, des decks…), composant
+  live `CollectionAdder` rendu en différé pour que la fiche, identique pour tous, garde son cache navigateur de 24 h.
+- **Ajout d'un deck** : depuis la page du deck, toutes les cartes jouées (commandant, deck, réserve) avec les impressions
+  choisies dans le deck, dans une collection existante ou une nouvelle.
+
+Les decks s'affichent en liste, en vignettes ou en tableau détaillé, groupés par type, couleur ou CCM
+(`?vue=…&groupe=…` sur la page du deck, boutons dans l'éditeur).
 
 ## Back-office
 

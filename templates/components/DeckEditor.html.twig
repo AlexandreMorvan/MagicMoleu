@@ -42,8 +42,9 @@
         </section>
 
         {# ---------- Contenu du deck ---------- #}
+        {{ include('deck/_display_switch.html.twig', {view: view, grouping: grouping, live: true}) }}
         <div data-loading="addClass(opacity-60)" class="space-y-4 transition-opacity">
-            {{ include('deck/_card_list.html.twig', {zones: this.zones, editable: true}) }}
+            {{ include('deck/_card_list.html.twig', {zones: this.zones, editable: true, view: view, grouping: grouping}) }}
         </div>
     </div>
 
