@@ -94,7 +94,7 @@
         {% endif %}
 
         <h3 class="mt-7 text-sm uppercase tracking-widest text-ink-300">Légalité</h3>
-        <ul class="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-5">
+        <ul class="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
             {% for format in formats %}
                 {% set status = legalities[format.value] ?? null %}
                 <li class="rounded-lg border px-2 py-1.5 text-center text-xs {{ legality_styles[status.value ?? 'not_legal'] }}">

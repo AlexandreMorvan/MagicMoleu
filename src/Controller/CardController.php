@@ -10,6 +10,7 @@ use App\Repository\CardPrintingRepository;
 use App\Repository\MtgSetRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\EventListener\AbstractSessionListener;
@@ -24,7 +25,7 @@ class CardController extends AbstractController
     /** Formats affichés sur la fiche d'une carte. */
     private const array DISPLAYED_FORMATS = [
         Format::Standard, Format::Pioneer, Format::Modern, Format::Legacy, Format::Vintage,
-        Format::Pauper, Format::Commander, Format::Brawl, Format::Historic, Format::Timeless,
+        Format::Pauper, Format::Commander, Format::Duel, Format::Brawl, Format::Historic, Format::Timeless,
     ];
 
     /**
@@ -42,8 +43,14 @@ class CardController extends AbstractController
      * Fiche d'une carte : affichée dans la modale (requête Turbo Frame) ou en page complète.
      */
     #[Route('/cartes/{id}', name: 'app_card_show', requirements: ['id' => Requirement::UUID], methods: ['GET'])]
-    public function show(OracleCard $card, Request $request, CardPrintingRepository $printings, EntityManagerInterface $em): Response
-    {
+    public function show(
+        OracleCard $card,
+        Request $request,
+        CardPrintingRepository $printings,
+        EntityManagerInterface $em,
+        #[Autowire('%app.build_version%')]
+        string $buildVersion,
+    ): Response {
         $cardPrintings = $printings->findForCard($card);
         $selectedId = $request->query->get('impression');
         $selected = array_find($cardPrintings, static fn (CardPrinting $p) => (string) $p->getId() === $selectedId)
@@ -65,7 +72,9 @@ class CardController extends AbstractController
             'legalities' => $legalities,
         ]);
 
-        if ($inModal) {
+        // Seule une fiche demandée avec la version courante du site (?v=, ajouté par la modale) est mise en cache :
+        // après un déploiement, la nouvelle version change l'URL et l'ancienne fiche n'est plus servie.
+        if ($inModal && $request->query->get('v') === $buildVersion) {
             // Le fragment de la modale ne dépend pas de l'utilisateur : le navigateur le garde 24 heures,
             // rouvrir une carte déjà vue ne refait donc pas de requête.
             $response->setPrivate()->setMaxAge(self::MODAL_CACHE_TTL);

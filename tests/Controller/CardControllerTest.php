@@ -45,11 +45,25 @@ class CardControllerTest extends WebTestCase
         self::assertStringContainsString('<table', $component->render()->toString());
     }
 
+    public function testLegalitiesIncludeDuelCommanderWithItsOwnBanList(): void
+    {
+        $crawler = $this->client->request('GET', '/cartes/'.$this->card('Sol Ring')->getId(), server: ['HTTP_TURBO_FRAME' => 'card_modal']);
+
+        $legalities = [];
+        foreach ($crawler->filter('ul li span.block') as $format) {
+            $legalities[$format->textContent] = trim($format->nextSibling->nextSibling->textContent);
+        }
+        self::assertSame('Légale', $legalities['Commander']);
+        self::assertSame('Bannie', $legalities['Duel Commander'], 'Sol Ring est banni en Duel Commander');
+    }
+
     public function testShowRendersFrameForModalRequests(): void
     {
         $bolt = $this->card('Lightning Bolt');
 
-        $this->client->request('GET', '/cartes/'.$bolt->getId(), server: ['HTTP_TURBO_FRAME' => 'card_modal']);
+        // La modale ajoute la version du site à l'URL (contrôleur Stimulus « modal »)
+        $version = self::getContainer()->getParameter('app.build_version');
+        $this->client->request('GET', '/cartes/'.$bolt->getId().'?v='.$version, server: ['HTTP_TURBO_FRAME' => 'card_modal']);
 
         self::assertResponseIsSuccessful();
         $html = $this->client->getResponse()->getContent();
@@ -64,6 +78,25 @@ class CardControllerTest extends WebTestCase
         self::assertStringContainsString('max-age=86400', $response->headers->get('Cache-Control'));
         self::assertStringContainsString('private', $response->headers->get('Cache-Control'));
         self::assertContains('Turbo-Frame', $response->getVary());
+    }
+
+    public function testModalIsNotCachedWithoutTheCurrentSiteVersion(): void
+    {
+        $bolt = $this->card('Lightning Bolt');
+
+        foreach (['', '?v=ancienne-version'] as $query) {
+            $this->client->request('GET', '/cartes/'.$bolt->getId().$query, server: ['HTTP_TURBO_FRAME' => 'card_modal']);
+
+            self::assertResponseIsSuccessful();
+            self::assertStringNotContainsString('max-age=86400', $this->client->getResponse()->headers->get('Cache-Control'), $query ?: 'sans version');
+        }
+    }
+
+    public function testModalSendsTheSiteVersion(): void
+    {
+        $this->client->request('GET', '/cartes');
+
+        self::assertSelectorExists(\sprintf('dialog[data-modal-version-value="%s"]', self::getContainer()->getParameter('app.build_version')));
     }
 
     public function testShowFullPageWithSelectedPrinting(): void

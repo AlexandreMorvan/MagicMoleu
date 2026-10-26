@@ -6,6 +6,17 @@ import { Controller } from '@hotwired/stimulus';
  */
 export default class extends Controller {
     static targets = ['frame', 'closeButton'];
+    static values = { version: String };
+
+    /*
+     * Les fiches de la modale sont gardées 24 h par le navigateur : la version du site dans l'URL
+     * fait qu'un déploiement ne ressert jamais une fiche produite par l'ancien code.
+     */
+    addVersion(event) {
+        if (this.versionValue) {
+            event.detail.url.searchParams.set('v', this.versionValue);
+        }
+    }
 
     open() {
         // Appelé à chaque chargement de la frame : changer d'impression ne doit pas faire défiler la modale
