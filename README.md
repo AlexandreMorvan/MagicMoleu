@@ -39,10 +39,11 @@ en publie une nouvelle version (`--force` pour réimporter quand même). Un verr
 ### Planification
 
 Les tâches sont déclarées dans `src/Schedule.php` (Symfony Scheduler) et exécutées par un worker Messenger,
-à garder actif (systemd, Supervisor…) :
+à garder actif (systemd, Supervisor…). Le transport `async` reçoit les synchronisations lancées depuis le
+back-office (et les emails) :
 
 ```bash
-bin/console messenger:consume scheduler_default
+bin/console messenger:consume async scheduler_default
 bin/console debug:scheduler   # prochaines exécutions
 ```
 
@@ -60,8 +61,9 @@ Les identifiants Scryfall servent de clés primaires (BINARY(16)) ; l'import éc
 ## Back-office
 
 Interface EasyAdmin sur `/admin`, réservée au rôle `ROLE_ADMIN` : tableau de bord, utilisateurs (rôles),
-decks, succès débloqués, notifications (envoi d'un message à un utilisateur), cartes (lecture seule) et éditions
-(choix manuel de l'illustration de couverture, protégée du calcul automatique).
+decks, succès débloqués, notifications (envoi d'un message à un utilisateur), cartes (lecture seule), éditions
+(choix manuel de l'illustration de couverture, protégée du calcul automatique) et synchronisation Scryfall
+(`/admin/scryfall` : lance en arrière-plan l'une des commandes `app:scryfall:*`, avec `--force` pour les imports bulk).
 
 ```bash
 bin/console app:user:promote <email-ou-pseudo>            # donner le rôle admin

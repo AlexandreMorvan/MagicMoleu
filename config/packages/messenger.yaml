@@ -21,6 +21,14 @@ framework:
             Symfony\Component\Mailer\Messenger\SendEmailMessage: async
             Symfony\Component\Notifier\Message\ChatMessage: async
             Symfony\Component\Notifier\Message\SmsMessage: async
+            # Synchronisations Scryfall lancées depuis le back-office (les messages du scheduler, déjà reçus, ne sont pas renvoyés)
+            Symfony\Component\Console\Messenger\RunCommandMessage: async
 
             # Route your messages to the transports
             # 'App\Message\YourMessage': async
+
+when@test:
+    framework:
+        messenger:
+            transports:
+                async: 'in-memory://'
