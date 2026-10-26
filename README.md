@@ -43,7 +43,7 @@ en publie une nouvelle version (`--force` pour réimporter quand même). Un verr
 >
 > ```bash
 > bin/console app:scryfall:import-cards --no-debug
-> bin/console messenger:consume scheduler_default --no-debug
+> bin/console messenger:consume async scheduler_default --no-debug
 > ```
 
 ### Planification
