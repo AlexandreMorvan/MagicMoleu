@@ -84,6 +84,7 @@ class DashboardController extends AbstractDashboardController
         yield MenuItem::section('Données Scryfall');
         yield MenuItem::linkTo(OracleCardCrudController::class, 'Cartes', 'fa fa-clone');
         yield MenuItem::linkTo(MtgSetCrudController::class, 'Éditions', 'fa fa-box-archive');
+        yield MenuItem::linkToRoute('Synchronisation', 'fa fa-rotate', 'admin_scryfall_index');
 
         yield MenuItem::section();
         yield MenuItem::linkToRoute('Retour au site', 'fa fa-arrow-left', 'app_home');

@@ -22,7 +22,10 @@
     <div class="row g-3 mt-1">
         <div class="col-lg-4">
             <div class="card h-100">
-                <div class="card-header fw-bold">Derniers imports Scryfall</div>
+                <div class="card-header fw-bold d-flex justify-content-between">
+                    Derniers imports Scryfall
+                    <a href="{{ path('admin_scryfall_index') }}" class="fw-normal"><i class="fa fa-rotate"></i> Synchroniser</a>
+                </div>
                 <ul class="list-group list-group-flush">
                     {% for label, date in imports %}
                         <li class="list-group-item d-flex justify-content-between">
