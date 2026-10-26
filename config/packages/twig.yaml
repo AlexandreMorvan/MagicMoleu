@@ -3,6 +3,7 @@ twig:
     form_themes: ['form/tailwind_theme.html.twig']
     globals:
         site_name: 'ManaForge'
+        build_version: '%app.build_version%'
 
 when@test:
     twig:
