@@ -72,7 +72,8 @@ class CollectionTest extends WebTestCase
     public function testCardModalOffersAddingToACollection(): void
     {
         $bolt = self::oracle('Lightning Bolt');
-        $this->client->request('GET', '/cartes/'.$bolt->getId(), server: ['HTTP_TURBO_FRAME' => 'card_modal']);
+        $version = self::getContainer()->getParameter('app.build_version');
+        $this->client->request('GET', '/cartes/'.$bolt->getId().'?v='.$version, server: ['HTTP_TURBO_FRAME' => 'card_modal']);
 
         self::assertResponseIsSuccessful();
         // Rendu différé : la fiche, en cache navigateur, ne contient rien de propre à l'utilisateur
