@@ -5,7 +5,9 @@ namespace App\Repository;
 use App\Entity\CardPrinting;
 use App\Entity\MtgSet;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\Persistence\ManagerRegistry;
+use SortDirection;
 
 /**
  * @extends ServiceEntityRepository<MtgSet>
@@ -30,7 +32,7 @@ class MtgSetRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('s')
             ->select('s.code', 's.name')
             ->where('s.cardCount > 0')
-            ->orderBy('s.releasedAt', 'DESC')
+            ->orderBy('s.releasedAt', SortDirection::Descending)
             ->getQuery()
             ->getArrayResult();
     }
@@ -46,7 +48,7 @@ class MtgSetRepository extends ServiceEntityRepository
             ->andWhere('s.digital = false')
             ->setParameter('types', self::MAIN_SET_TYPES)
             ->setParameter('today', new \DateTimeImmutable('today'), 'date_immutable')
-            ->orderBy('s.releasedAt', 'DESC')
+            ->orderBy('s.releasedAt', SortDirection::Descending)
             ->setMaxResults($limit)
             ->getQuery()
             ->getResult();
@@ -61,10 +63,10 @@ class MtgSetRepository extends ServiceEntityRepository
     {
         $qb = $this->createQueryBuilder('s')
             ->select('s AS set', 'COUNT(p.id) AS cards')
-            ->join(CardPrinting::class, 'p', 'WITH', 'p.set = s')
+            ->join(CardPrinting::class, 'p', Join::ON, 'p.set = s')
             ->groupBy('s.id')
-            ->orderBy('s.releasedAt', 'DESC')
-            ->addOrderBy('s.name', 'ASC');
+            ->orderBy('s.releasedAt', SortDirection::Descending)
+            ->addOrderBy('s.name', SortDirection::Ascending);
 
         if ($mainOnly) {
             $qb->where('s.setType IN (:types)')->setParameter('types', self::MAIN_SET_TYPES);

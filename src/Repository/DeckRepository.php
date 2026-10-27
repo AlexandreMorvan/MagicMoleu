@@ -6,6 +6,7 @@ use App\Entity\Deck;
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use SortDirection;
 
 /**
  * @extends ServiceEntityRepository<Deck>
@@ -49,7 +50,7 @@ class DeckRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('d')
             ->join('d.owner', 'u')->addSelect('u')
             ->where('d.public = true')
-            ->orderBy('d.updatedAt', 'DESC')
+            ->orderBy('d.updatedAt', SortDirection::Descending)
             ->setMaxResults($limit)
             ->getQuery()
             ->getResult();

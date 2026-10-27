@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\Entity\OracleCard;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use SortDirection;
 
 /**
  * @extends ServiceEntityRepository<OracleCard>
@@ -39,8 +40,8 @@ class OracleCardRepository extends ServiceEntityRepository
             ->setParameter('prefix', $escaped.'%')
             ->setParameter('contains', '%'.$escaped.'%')
             ->setParameter('excluded', self::NON_GAME_LAYOUTS)
-            ->orderBy('relevance', 'ASC')
-            ->addOrderBy('o.name', 'ASC')
+            ->orderBy('relevance', SortDirection::Ascending)
+            ->addOrderBy('o.name', SortDirection::Ascending)
             ->setMaxResults($limit)
             ->getQuery()
             ->getResult();
@@ -63,7 +64,7 @@ class OracleCardRepository extends ServiceEntityRepository
             ->setParameter('name', $name)
             ->setParameter('front', $escaped.' // %')
             ->setParameter('excluded', self::NON_GAME_LAYOUTS)
-            ->orderBy('relevance', 'ASC')
+            ->orderBy('relevance', SortDirection::Ascending)
             ->setMaxResults(1)
             ->getQuery()
             ->getOneOrNullResult();
