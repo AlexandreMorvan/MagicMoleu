@@ -29,6 +29,7 @@ class DeckVoter extends Voter
         return match ($attribute) {
             self::VIEW => $subject->isPublic() || $isOwner,
             self::EDIT => $isOwner,
+            default => false,
         };
     }
 }

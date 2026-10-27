@@ -30,6 +30,9 @@ class DeckValidatorTest extends KernelTestCase
         self::assertSame([] === $expectedErrors, $validation->isValid());
     }
 
+    /**
+     * @return iterable<string, array{Format, array<string, int|array{int, DeckZone}>, list<string>}>
+     */
     public static function decks(): iterable
     {
         $commander = [1, DeckZone::Commander];

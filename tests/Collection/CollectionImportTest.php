@@ -12,6 +12,9 @@ use App\Repository\CardPrintingRepository;
 use App\Tests\Deck\DeckTestTrait;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
+use Symfony\Component\DomCrawler\Field\ChoiceFormField;
+use Symfony\Component\DomCrawler\Field\FileFormField;
+use Symfony\Component\DomCrawler\Form;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 class CollectionImportTest extends WebTestCase
@@ -88,7 +91,7 @@ class CollectionImportTest extends WebTestCase
         self::assertSelectorTextContains('main', 'ManaBox');
 
         $form = $this->client->getCrawler()->selectButton('Importer')->form();
-        $form['collection_import[file]']->upload(self::CSV);
+        self::upload($form, self::CSV);
         $form['collection_import[name]'] = 'Mon classeur';
         $this->client->submit($form);
 
@@ -104,8 +107,10 @@ class CollectionImportTest extends WebTestCase
         $crawler = $this->client->request('GET', '/collections/importer?collection='.$collection->getId());
         $form = $crawler->selectButton('Importer')->form();
         self::assertSame((string) $collection->getId(), $form['collection_import[collection]']->getValue(), 'collection présélectionnée');
-        $form['collection_import[file]']->upload(self::CSV);
-        $form['collection_import[replace]']->tick();
+        self::upload($form, self::CSV);
+        $replace = $form['collection_import[replace]'];
+        self::assertInstanceOf(ChoiceFormField::class, $replace);
+        $replace->tick();
         $this->client->submit($form);
 
         self::assertSame(10, $this->reload($collection)->getCardCount());
@@ -135,6 +140,13 @@ class CollectionImportTest extends WebTestCase
 
         self::assertSame('', $form['collection_import[collection]']->getValue(), 'la collection d\'un autre n\'est pas proposée');
         self::assertStringNotContainsString('Classeur', $this->client->getResponse()->getContent());
+    }
+
+    private static function upload(Form $form, string $path): void
+    {
+        $field = $form['collection_import[file]'];
+        self::assertInstanceOf(FileFormField::class, $field);
+        $field->upload($path);
     }
 
     private function persistCollection(): CardCollection

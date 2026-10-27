@@ -25,6 +25,9 @@ class RegistrationForm extends AbstractController
     use ComponentWithFormTrait;
     use DefaultActionTrait;
 
+    /**
+     * @return FormInterface<User>
+     */
     protected function instantiateForm(): FormInterface
     {
         return $this->createForm(RegistrationFormType::class, new User());

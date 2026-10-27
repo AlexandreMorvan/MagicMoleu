@@ -90,7 +90,7 @@ class DeckExtension
     }
 
     /**
-     * @return array<string, array{string, ?string}> groupes « 0 » à « 7+ » puis terrains
+     * @return array<int|string, array{string, ?string}> groupes 0 à 7 (« 7+ ») puis « land » ; PHP convertit les clés « 0 »… en entiers
      */
     private static function manaValueGroups(): array
     {

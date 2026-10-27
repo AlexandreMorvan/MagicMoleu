@@ -113,12 +113,18 @@ class SetCards
         return $this->hasMainCards() && $this->getCounts()['extra'] > 0;
     }
 
+    /**
+     * @return list<Color|'C'> couleurs, puis « C » pour incolore
+     */
     #[ExposeInTemplate]
     public function getColorChoices(): array
     {
         return [...Color::cases(), 'C'];
     }
 
+    /**
+     * @return list<Rarity>
+     */
     #[ExposeInTemplate]
     public function getRarityChoices(): array
     {

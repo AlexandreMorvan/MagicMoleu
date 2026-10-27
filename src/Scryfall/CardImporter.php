@@ -38,8 +38,12 @@ class CardImporter
         'image_rank' => 'IF(VALUES(`image_rank`) >= COALESCE(`image_rank`, -1), VALUES(`image_rank`), `image_rank`)',
     ];
 
-    /** @var array<string, list<array<string, scalar|null>>> */
-    private array $buffer = [];
+    /**
+     * Lignes en attente d'écriture, par table ; les éditions sont indexées par identifiant pour n'être écrites qu'une fois.
+     *
+     * @var array{mtg_set: array<string, array<string, scalar|null>>, oracle_card: list<array<string, scalar|null>>, card_face: list<array<string, scalar|null>>, card_printing: list<array<string, scalar|null>>, card_legality: list<array<string, scalar|null>>}
+     */
+    private array $buffer = ['mtg_set' => [], 'oracle_card' => [], 'card_face' => [], 'card_printing' => [], 'card_legality' => []];
 
     public function __construct(
         private readonly CardMapper $mapper,
@@ -101,6 +105,6 @@ class CardImporter
 
     private function resetBuffer(): void
     {
-        $this->buffer = array_fill_keys(['mtg_set', 'oracle_card', 'card_face', 'card_printing', 'card_legality'], []);
+        $this->buffer = ['mtg_set' => [], 'oracle_card' => [], 'card_face' => [], 'card_printing' => [], 'card_legality' => []];
     }
 }

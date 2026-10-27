@@ -149,6 +149,9 @@ class DeckController extends AbstractController
         return $this->decks->findWithCards($id) ?? throw $this->createNotFoundException('Deck introuvable.');
     }
 
+    /**
+     * @param FormInterface<Deck> $form
+     */
     private function importList(FormInterface $form, Deck $deck, DeckImporter $importer): void
     {
         $list = trim((string) $form->get('list')->getData());

@@ -104,18 +104,27 @@ class SpoilerGallery
         return $days;
     }
 
+    /**
+     * @return list<array{code: string, name: string, releasedAt: ?\DateTimeImmutable, iconSvgUri: ?string, cards: int}>
+     */
     #[ExposeInTemplate]
     public function getSets(): array
     {
         return $this->printings->findSpoilerSets($this->since());
     }
 
+    /**
+     * @return list<Rarity>
+     */
     #[ExposeInTemplate]
     public function getRarityChoices(): array
     {
         return [Rarity::Common, Rarity::Uncommon, Rarity::Rare, Rarity::Mythic];
     }
 
+    /**
+     * @return list<Color|'C'> couleurs, puis « C » pour incolore
+     */
     #[ExposeInTemplate]
     public function getColorChoices(): array
     {

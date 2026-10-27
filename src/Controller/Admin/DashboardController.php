@@ -35,7 +35,7 @@ class DashboardController extends AbstractDashboardController
 
     public function index(): Response
     {
-        $count = fn (string $class, array $criteria = []) => $this->em->getRepository($class)->count($criteria);
+        $count = $this->count(...);
 
         return $this->render('admin/dashboard.html.twig', [
             'stats' => [
@@ -53,6 +53,15 @@ class DashboardController extends AbstractDashboardController
             'latest_users' => $this->users->findBy([], ['createdAt' => 'DESC'], 5),
             'latest_decks' => $this->decks->findBy([], ['updatedAt' => 'DESC'], 5),
         ]);
+    }
+
+    /**
+     * @param class-string         $class
+     * @param array<string, mixed> $criteria
+     */
+    private function count(string $class, array $criteria = []): int
+    {
+        return $this->em->getRepository($class)->count($criteria);
     }
 
     public function configureDashboard(): Dashboard
