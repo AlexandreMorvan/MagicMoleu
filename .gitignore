@@ -18,3 +18,8 @@
 /public/assets/
 /assets/vendor/
 ###< symfony/asset-mapper ###
+
+###> uploads ###
+# Logos d'éditions téléchargés depuis l'admin (à conserver entre deux déploiements)
+/public/uploads/
+###< uploads ###

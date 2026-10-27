@@ -95,7 +95,8 @@ Les decks s'affichent en liste, en vignettes ou en tableau détaillé, groupés 
 
 Interface EasyAdmin sur `/admin`, réservée au rôle `ROLE_ADMIN` : tableau de bord, utilisateurs (rôles),
 decks, succès débloqués, notifications (envoi d'un message à un utilisateur), cartes (lecture seule), éditions
-(choix manuel de l'illustration de couverture, protégée du calcul automatique) et synchronisation Scryfall
+(choix manuel de l'illustration de couverture, protégée du calcul automatique ; logo de l'édition envoyé en fichier ou à partir d'une URL
+d'image, copié dans `public/uploads/sets/` — dossier à conserver entre deux déploiements) et synchronisation Scryfall
 (`/admin/scryfall` : lance en arrière-plan l'une des commandes `app:scryfall:*`, avec `--force` pour les imports bulk).
 
 ```bash

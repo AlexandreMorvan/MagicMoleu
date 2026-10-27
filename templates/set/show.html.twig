@@ -14,7 +14,11 @@
                 <span class="badge">{{ set.setType|replace({'_': ' '})|capitalize }}</span>
                 {% if upcoming %}<span class="badge border-neon-cyan/50 text-neon-cyan">À venir</span>{% endif %}
             </p>
-            <h1 class="mt-3 text-3xl uppercase sm:text-4xl">{{ set.name }}</h1>
+            {% if set.logoPath %}
+                <h1 class="mt-3"><img src="{{ asset(set.logoPath) }}" alt="{{ set.name }}" class="h-20 w-auto max-w-full object-contain sm:h-24"></h1>
+            {% else %}
+                <h1 class="mt-3 text-3xl uppercase sm:text-4xl">{{ set.name }}</h1>
+            {% endif %}
             <p class="mt-1 text-ink-300">
                 {% if set.releasedAt %}{{ upcoming ? 'Sortie prévue le' : 'Sortie le' }} {{ set.releasedAt|format_date('long', locale: 'fr') }}{% endif %}
                 {% if parent %} · Rattachée à <a href="{{ path('app_set_show', {code: parent.code}) }}" class="text-neon-cyan hover:underline">{{ parent.name }}</a>{% endif %}

@@ -51,6 +51,14 @@ class MtgSet
         /** Couverture choisie à la main dans l'admin : le calcul automatique ne la remplace plus. */
         #[ORM\Column(options: ['default' => false])]
         private bool $coverLocked = false,
+
+        /** URL d'origine du logo (titre stylisé de l'édition), renseignée dans l'admin. */
+        #[ORM\Column(length: 500, nullable: true)]
+        private ?string $logoSourceUrl = null,
+
+        /** Copie locale du logo, chemin relatif à public/ ; voir {@see \App\Set\SetLogoStorage}. */
+        #[ORM\Column(length: 255, nullable: true)]
+        private ?string $logoPath = null,
     ) {
     }
 
@@ -136,6 +144,30 @@ class MtgSet
     public function setCoverLocked(bool $coverLocked): static
     {
         $this->coverLocked = $coverLocked;
+
+        return $this;
+    }
+
+    public function getLogoSourceUrl(): ?string
+    {
+        return $this->logoSourceUrl;
+    }
+
+    public function setLogoSourceUrl(?string $logoSourceUrl): static
+    {
+        $this->logoSourceUrl = $logoSourceUrl;
+
+        return $this;
+    }
+
+    public function getLogoPath(): ?string
+    {
+        return $this->logoPath;
+    }
+
+    public function setLogoPath(?string $logoPath): static
+    {
+        $this->logoPath = $logoPath;
 
         return $this;
     }
