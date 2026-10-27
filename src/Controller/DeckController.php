@@ -9,6 +9,7 @@ use App\Entity\Deck;
 use App\Entity\User;
 use App\Enum\DeckGrouping;
 use App\Enum\DeckView;
+use App\Enum\Format;
 use App\Form\DeckType;
 use App\Repository\CardCollectionRepository;
 use App\Repository\DeckRepository;
@@ -49,6 +50,10 @@ class DeckController extends AbstractController
     public function new(Request $request, #[CurrentUser] User $user, DeckImporter $importer): Response
     {
         $deck = new Deck($user);
+        // Format préféré du compte, s'il fait partie des formats de deck
+        if (\in_array($user->getPreferredFormat(), Format::deckFormats(), true)) {
+            $deck->setFormat($user->getPreferredFormat());
+        }
         $form = $this->createForm(DeckType::class, $deck)->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
@@ -68,7 +73,7 @@ class DeckController extends AbstractController
         int $id,
         #[CurrentUser] ?User $user,
         CardCollectionRepository $collections,
-        #[MapQueryParameter] DeckView $vue = DeckView::List,
+        #[MapQueryParameter] ?DeckView $vue = null,
         #[MapQueryParameter] DeckGrouping $groupe = DeckGrouping::Type,
     ): Response {
         $deck = $this->findDeck($id);
@@ -76,7 +81,8 @@ class DeckController extends AbstractController
 
         return $this->render('deck/show.html.twig', [
             'deck' => $deck,
-            'view' => $vue,
+            // Sans choix dans l'URL : la vue par défaut du compte
+            'view' => $vue ?? $user?->getDefaultDeckView() ?? DeckView::List,
             'grouping' => $groupe,
             // Pour « ajouter toutes les cartes à une collection »
             'collections' => $user ? $collections->findByOwner($user) : [],

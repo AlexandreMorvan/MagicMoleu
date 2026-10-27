@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="fr">
+<body style="margin:0;background:#0b0d12;font-family:Arial,sans-serif;color:#d7dbe6">
+    <div style="max-width:520px;margin:0 auto;padding:32px 24px">
+        <p style="font-size:20px;font-weight:bold;letter-spacing:.15em;color:#ffffff">MANAFORGE</p>
+        <p>Bonjour {{ username }},</p>
+        <p>Tu as demandé à réinitialiser ton mot de passe. Clique sur le bouton ci-dessous pour en choisir un nouveau :</p>
+        <p style="margin:28px 0">
+            <a href="{{ url('app_reset_password', {token: resetToken.token}) }}"
+               style="background:#8b5cf6;color:#ffffff;padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:bold">Choisir un nouveau mot de passe</a>
+        </p>
+        <p style="font-size:13px;color:#8b93ab">Ce lien expire dans {{ (resetToken.expiresAt.timestamp - 'now'|date('U')) // 60 }} minutes. Si tu n'es pas à l'origine de cette demande, ignore cet email : ton mot de passe ne change pas.</p>
+    </div>
+</body>
+</html>

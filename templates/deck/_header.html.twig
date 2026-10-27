@@ -9,7 +9,9 @@
         <div>
             <p class="badge border-neon-violet/50 text-neon-violet">{{ deck.format.label }}{{ deck.public ? '' : ' · privé' }}</p>
             <h1 class="mt-3 text-3xl uppercase sm:text-4xl">{{ deck.name }}</h1>
-            <p class="mt-1 text-sm text-ink-300">par {{ deck.owner.username }} · modifié le {{ deck.updatedAt|format_datetime('medium', 'short', locale: 'fr') }}</p>
+            <p class="mt-1 flex flex-wrap items-center gap-1.5 text-sm text-ink-300">par
+                <a href="{{ path('app_player', {username: deck.owner.username}) }}" class="inline-flex items-center gap-1.5 font-semibold text-ink-100 hover:text-neon-cyan">
+                    <twig:Avatar :user="deck.owner" size="h-5 w-5 text-[0.6rem]" />{{ deck.owner.username }}</a> · modifié le {{ deck.updatedAt|format_datetime('medium', 'short', locale: 'fr') }}</p>
             {% if deck.description %}<p class="mt-3 max-w-2xl text-ink-100">{{ deck.description|nl2br }}</p>{% endif %}
         </div>
         <div class="flex flex-wrap gap-2">{{ actions|default('')|raw }}</div>

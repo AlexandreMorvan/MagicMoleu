@@ -1,0 +1,38 @@
+<div {{ attributes.defaults({class: 'mt-4'}) }}>
+    {% set current = app.user.avatarCard %}
+    <div class="flex flex-wrap items-center gap-x-5 gap-y-3">
+        <input type="search" class="input w-full sm:w-56 py-1.5 text-sm" data-model="debounce(250)|query" placeholder="Nom (anglais ou français)…" aria-label="Rechercher un planeswalker">
+        {{ include('_color_toggles.html.twig', {choices: colorChoices, model: 'colors', size: 'h-8 w-8'}) }}
+        <span data-loading class="h-4 w-4 animate-spin rounded-full border-2 border-neon-violet border-t-transparent" hidden></span>
+        {% if current %}
+            <button type="button" class="ml-auto text-sm text-ink-300 hover:text-mana-r" data-action="live#action" data-live-action-param="clear">Retirer l'avatar</button>
+        {% endif %}
+    </div>
+
+    {% set candidates = this.candidates|slice(0, limit) %}
+    <div data-loading="addClass(opacity-60)" class="mt-4 transition-opacity">
+        {% if candidates is empty %}
+            <p class="text-sm text-ink-500">Aucun planeswalker ne correspond.</p>
+        {% else %}
+            <ul class="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
+                {% for card in candidates %}
+                    {% set selected = current and current.id == card.id %}
+                    <li>
+                        <button type="button" class="group block w-full text-left focus-visible:outline-none"
+                                data-action="live#action" data-live-action-param="choose" data-live-card-id-param="{{ card.id }}"
+                                {% if selected %}aria-current="true"{% endif %} title="{{ card.name }}">
+                            <img src="{{ card.artCropUri }}" alt="" loading="lazy"
+                                 class="aspect-square w-full rounded-full object-cover ring-2 transition {{ selected ? 'ring-neon-cyan shadow-glow-cyan' : 'ring-transparent group-hover:ring-neon-violet group-focus-visible:ring-neon-cyan' }}">
+                            <span class="mt-1 block truncate text-center text-xs {{ selected ? 'text-neon-cyan' : 'text-ink-300 group-hover:text-white' }}">{{ card.name }}</span>
+                        </button>
+                    </li>
+                {% endfor %}
+            </ul>
+            {% if this.hasMore %}
+                <div class="mt-4 text-center">
+                    <button type="button" class="btn btn-ghost" data-action="live#action" data-live-action-param="more">Voir plus de planeswalkers</button>
+                </div>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>

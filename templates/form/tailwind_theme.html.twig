@@ -19,6 +19,45 @@
     {{- parent() -}}
 {%- endblock form_widget_simple -%}
 
+{%- block textarea_widget -%}
+    {%- set attr = attr|merge({class: (attr.class|default('') ~ ' input' ~ (errors|length ? ' input-error'))|trim}) -%}
+    {{- parent() -}}
+{%- endblock textarea_widget -%}
+
+{%- block choice_widget_collapsed -%}
+    {%- set attr = attr|merge({class: (attr.class|default('') ~ ' input' ~ (errors|length ? ' input-error'))|trim}) -%}
+    {{- parent() -}}
+{%- endblock choice_widget_collapsed -%}
+
+{# Cases à cocher / boutons radio d'un choix « expanded » : en ligne, libellé à droite #}
+{%- block choice_widget_expanded -%}
+    <div {{ block('widget_container_attributes') }} class="flex flex-wrap gap-x-5 gap-y-2">
+        {%- for child in form %}
+            <label class="flex cursor-pointer items-center gap-2 text-sm text-ink-100">
+                {{- form_widget(child) -}}
+                {{- child.vars.label -}}
+            </label>
+        {% endfor -%}
+    </div>
+{%- endblock choice_widget_expanded -%}
+
+{%- block radio_widget -%}
+    {%- set attr = attr|merge({class: (attr.class|default('') ~ ' h-4 w-4 border-ink-700 bg-ink-900 accent-neon-violet')|trim}) -%}
+    {{- parent() -}}
+{%- endblock radio_widget -%}
+
+{# Case à cocher seule : libellé à droite, sur la même ligne #}
+{%- block checkbox_row -%}
+    <div class="mb-5">
+        <label class="flex cursor-pointer items-center gap-2 text-sm text-ink-100">
+            {{- form_widget(form) -}}
+            {{- label -}}
+        </label>
+        {{- form_help(form) -}}
+        {{- form_errors(form) -}}
+    </div>
+{%- endblock checkbox_row -%}
+
 {%- block checkbox_widget -%}
     {%- set attr = attr|merge({class: (attr.class|default('') ~ ' h-4 w-4 rounded border-ink-700 bg-ink-900 accent-neon-violet')|trim}) -%}
     {{- parent() -}}

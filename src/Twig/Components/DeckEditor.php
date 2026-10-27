@@ -7,6 +7,7 @@ use App\Deck\DeckBuilder;
 use App\Entity\Deck;
 use App\Entity\DeckCard;
 use App\Entity\OracleCard;
+use App\Entity\User;
 use App\Enum\DeckGrouping;
 use App\Enum\DeckView;
 use App\Enum\DeckZone;
@@ -56,6 +57,18 @@ class DeckEditor extends AbstractController
         private readonly EntityManagerInterface $em,
         private readonly AchievementChecker $achievements,
     ) {
+    }
+
+    /**
+     * Vue par défaut du compte ; une vue passée dans l'URL (?vue=) est appliquée ensuite et l'emporte.
+     */
+    public function mount(int $deckId): void
+    {
+        $this->deckId = $deckId;
+        $user = $this->getUser();
+        if ($user instanceof User) {
+            $this->view = $user->getDefaultDeckView();
+        }
     }
 
     /**

@@ -91,6 +91,17 @@ raretés, couleurs, cartes les plus chères, éditions principales).
 Les decks s'affichent en liste, en vignettes ou en tableau détaillé, groupés par type, couleur ou CCM
 (`?vue=…&groupe=…` sur la page du deck, boutons dans l'éditeur).
 
+## Compte utilisateur
+
+- **Mon compte** (`/profil/parametres`) : pseudo et email (confirmés par le mot de passe), avatar parmi les planeswalkers
+  (illustrations Scryfall déjà en base), présentation, couleurs favorites (nom de guilde / clan affiché), format préféré
+  (proposé à la création d'un deck), mot de passe, préférences (toasts de notification, vue par défaut des decks et
+  des collections), export JSON de toutes les données, suppression du compte (confirmation SweetAlert + mot de passe).
+- **Profil public** (`/joueurs/{pseudo}`) : avatar, présentation, couleurs, succès débloqués, decks publics.
+- **Mot de passe oublié** (`/mot-de-passe-oublie`, symfonycasts/reset-password-bundle) : lien valable une heure,
+  une demande toutes les 15 minutes. Les emails partent via Messenger (transport `async`) ; configurer un vrai
+  `MAILER_DSN` et l'expéditeur `MAILER_FROM` dans `.env.local` (avec `null://null`, aucun email n'est envoyé).
+
 ## Back-office
 
 Interface EasyAdmin sur `/admin`, réservée au rôle `ROLE_ADMIN` : tableau de bord, utilisateurs (rôles),

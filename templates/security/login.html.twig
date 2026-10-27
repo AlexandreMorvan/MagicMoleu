@@ -22,9 +22,12 @@
                 <label for="password" class="label">Mot de passe</label>
                 <input type="password" name="_password" id="password" class="input" autocomplete="current-password" required>
             </div>
-            <label class="mb-6 flex items-center gap-2 text-sm text-ink-300">
-                <input type="checkbox" name="_remember_me" class="h-4 w-4 accent-neon-violet"> Rester connecté
-            </label>
+            <div class="mb-6 flex flex-wrap items-center justify-between gap-2 text-sm">
+                <label class="flex items-center gap-2 text-ink-300">
+                    <input type="checkbox" name="_remember_me" class="h-4 w-4 accent-neon-violet"> Rester connecté
+                </label>
+                <a href="{{ path('app_forgot_password') }}" class="text-neon-cyan hover:underline">Mot de passe oublié ?</a>
+            </div>
 
             <input type="hidden" name="_csrf_token" data-controller="csrf-protection" value="{{ csrf_token('authenticate') }}">
 

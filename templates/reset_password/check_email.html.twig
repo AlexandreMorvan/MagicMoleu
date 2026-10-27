@@ -1,0 +1,16 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Email envoyé{% endblock %}
+
+{% block body %}
+    <div class="mx-auto max-w-md">
+        <h1 class="text-3xl uppercase">Vérifie tes emails</h1>
+        <div class="panel mt-8 space-y-3 p-6 text-ink-100 sm:p-8">
+            <p>Si un compte correspond à cet email, un lien pour réinitialiser ton mot de passe vient de t'être envoyé.</p>
+            <p class="text-sm text-ink-300">Le lien est valable {{ lifetime_minutes }} minutes. Pense à regarder dans les indésirables ; sans email, refais une demande d'ici quelques minutes.</p>
+        </div>
+        <p class="mt-6 text-center text-sm text-ink-300">
+            <a href="{{ path('app_login') }}" class="font-semibold text-neon-cyan hover:underline">Retour à la connexion</a>
+        </p>
+    </div>
+{% endblock %}
