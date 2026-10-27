@@ -3,17 +3,22 @@
 namespace App\Controller;
 
 use App\Collection\CollectionBuilder;
+use App\Collection\CsvImportException;
+use App\Collection\ManaboxCsvImporter;
 use App\Entity\CardCollection;
 use App\Entity\User;
 use App\Form\CardCollectionType;
+use App\Form\CollectionImportType;
 use App\Repository\CardCollectionRepository;
 use App\Repository\DeckRepository;
 use App\Security\CardCollectionVoter;
 use App\Security\DeckVoter;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Form\FormError;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Requirement\Requirement;
@@ -53,6 +58,62 @@ class CollectionController extends AbstractController
         }
 
         return $this->render('collection/form.html.twig', ['form' => $form, 'collection' => null]);
+    }
+
+    /**
+     * Import d'un export CSV ManaBox, dans une collection existante (?collection=id pour la présélectionner) ou nouvelle.
+     */
+    #[Route('/importer', name: 'app_collection_import', methods: ['GET', 'POST'])]
+    public function import(
+        Request $request,
+        #[CurrentUser] User $user,
+        ManaboxCsvImporter $importer,
+        #[MapQueryParameter] ?int $collection = null,
+    ): Response {
+        $preselected = $collection ? $this->collections->findOneBy(['id' => $collection, 'owner' => $user]) : null;
+        $form = $this->createForm(CollectionImportType::class, ['collection' => $preselected], ['owner' => $user])->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $data = $form->getData();
+            $target = $data['collection'] ? $this->findCollection($data['collection']->getId()) : null;
+            if (null === $target) {
+                $name = trim((string) $data['name']) ?: 'Import ManaBox du '.date('d/m/Y');
+                $target = (new CardCollection($user))->setName($name);
+                $this->em->persist($target);
+            }
+
+            try {
+                $result = $importer->import($target, $data['file']->getPathname(), (bool) $data['replace']);
+            } catch (CsvImportException $e) {
+                $form->get('file')->addError(new FormError($e->getMessage()));
+
+                return $this->render('collection/import.html.twig', ['form' => $form], new Response(status: 422));
+            }
+            $this->em->flush();
+
+            $this->addFlash('success', \sprintf('%d carte%s importée%2$s (%d ligne%s) dans « %s ».', $result->copies, $result->copies > 1 ? 's' : '', $result->lines, $result->lines > 1 ? 's' : '', $target->getName()));
+            if ($result->approximated) {
+                $this->addFlash('warning', \sprintf('Impression introuvable, carte rattachée à une autre : %s.', self::summarize($result->approximated)));
+            }
+            if ($result->notFound) {
+                $this->addFlash('error', \sprintf('Carte%s introuvable%1$s, non importée%1$s : %s.', \count($result->notFound) > 1 ? 's' : '', self::summarize($result->notFound)));
+            }
+            if ($result->proxies) {
+                $this->addFlash('warning', \sprintf('%d proxy ignoré%s.', $result->proxies, $result->proxies > 1 ? 's' : ''));
+            }
+
+            return $this->redirectToRoute('app_collection_show', ['id' => $target->getId()]);
+        }
+
+        return $this->render('collection/import.html.twig', ['form' => $form]);
+    }
+
+    /**
+     * @param list<string> $items
+     */
+    private static function summarize(array $items): string
+    {
+        return implode(' · ', \array_slice($items, 0, 15)).(\count($items) > 15 ? \sprintf(' … et %d autre(s)', \count($items) - 15) : '');
     }
 
     /**
