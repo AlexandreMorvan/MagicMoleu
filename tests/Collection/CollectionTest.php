@@ -241,6 +241,30 @@ class CollectionTest extends WebTestCase
         self::assertCount(0, $component->set('sort', 'name')->render()->crawler()->filter('tbody th[scope="rowgroup"]'));
     }
 
+    public function testLargeCollectionIsPaginated(): void
+    {
+        $collection = $this->persistCollection(['Lightning Bolt' => 1]);
+        $em = self::getContainer()->get(EntityManagerInterface::class);
+        $bolt = $this->printing('Lightning Bolt');
+        // 130 lignes distinctes : même impression, langues différentes
+        foreach (range(1, 129) as $i) {
+            $collection->addCard($bolt, 1, false, 'x'.$i);
+        }
+        $em->flush();
+
+        $this->client->loginUser($this->owner);
+        $component = $this->createLiveComponent(CollectionBrowser::class, ['collectionId' => $collection->getId()], $this->client)
+            ->actingAs($this->owner);
+
+        $crawler = $component->render()->crawler();
+        self::assertCount(120, $crawler->filter('li.group'));
+        self::assertStringContainsString('120 sur 130 lignes', $crawler->filter('button[data-live-action-param="more"]')->text());
+
+        $crawler = $component->call('more')->render()->crawler();
+        self::assertCount(130, $crawler->filter('li.group'));
+        self::assertCount(0, $crawler->filter('button[data-live-action-param="more"]'));
+    }
+
     public function testStats(): void
     {
         $collection = $this->persistCollection(['Lightning Bolt' => 4, 'Counterspell' => 2, 'Jace, the Mind Sculptor' => 1, 'Forest' => 10]);

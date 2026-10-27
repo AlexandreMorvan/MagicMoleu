@@ -45,6 +45,7 @@
                                 <th class="px-3 py-2">Carte</th>
                                 <th class="hidden px-3 py-2 md:table-cell">Coût</th>
                                 <th class="px-3 py-2">Édition</th>
+                                <th class="hidden px-3 py-2 sm:table-cell">Ex.</th>
                                 <th class="px-3 py-2 text-right">Prix</th>
                                 <th class="px-3 py-2 text-right">Total</th>
                                 <th class="px-3 py-2"><span class="sr-only">Actions</span></th>
@@ -54,7 +55,7 @@
                             <tbody class="divide-y divide-ink-800 border-t border-ink-800">
                                 {% if section.label %}
                                     <tr class="bg-ink-900/70">
-                                        <th colspan="7" scope="rowgroup" class="px-3 py-2 text-left">{{ include('collection/_section_header.html.twig') }}</th>
+                                        <th colspan="8" scope="rowgroup" class="px-3 py-2 text-left">{{ include('collection/_section_header.html.twig') }}</th>
                                     </tr>
                                 {% endif %}
                                 {% for line in section.lines %}
@@ -73,6 +74,9 @@
                                                 <span class="h-2 w-2 rounded-full rarity-{{ printing.rarity.value }}" title="{{ printing.rarity.label }}"></span>
                                                 {{ printing.set.code|upper }} #{{ printing.collectorNumber }}
                                             </span>
+                                        </td>
+                                        <td class="hidden whitespace-nowrap px-3 py-1.5 text-xs text-ink-300 sm:table-cell" title="{{ line.condition.label }}{{ line.purchasePrice is not null ? ' · acheté ' ~ line.purchasePrice|format_currency(line.purchaseCurrency, locale: 'fr') }}">
+                                            {{ line.lang|upper }} · {{ line.condition.abbreviation }}
                                         </td>
                                         <td class="whitespace-nowrap px-3 py-1.5 text-right text-xs text-ink-300">{{ line.unitPrice is not null ? line.unitPrice|format_currency('EUR', locale: 'fr') : '—' }}</td>
                                         <td class="whitespace-nowrap px-3 py-1.5 text-right text-white">{{ line.unitPrice is not null ? line.totalPrice|format_currency('EUR', locale: 'fr') : '—' }}</td>
@@ -105,9 +109,10 @@
                                                 {% if line.quantity > 1 %}
                                                     <span class="absolute right-2 top-2 rounded-full bg-ink-950/85 px-2 py-0.5 text-xs font-bold text-white">× {{ line.quantity }}</span>
                                                 {% endif %}
-                                                {% if line.foil %}
-                                                    <span class="absolute left-2 top-2 rounded-full bg-neon-fuchsia/80 px-2 py-0.5 text-[0.65rem] font-bold uppercase text-white">Foil</span>
-                                                {% endif %}
+                                                <span class="absolute left-2 top-2 flex gap-1">
+                                                    {% if line.foil %}<span class="rounded-full bg-neon-fuchsia/80 px-2 py-0.5 text-[0.65rem] font-bold uppercase text-white">Foil</span>{% endif %}
+                                                    {% if line.lang != 'en' %}<span class="rounded-full bg-ink-950/85 px-2 py-0.5 text-[0.65rem] font-bold uppercase text-white" title="Langue">{{ line.lang }}</span>{% endif %}
+                                                </span>
                                             </div>
                                         </a>
                                         <div class="mt-2 flex items-center gap-2">
@@ -117,6 +122,7 @@
                                         <p class="flex items-center gap-1.5 text-xs text-ink-500">
                                             <span class="h-2 w-2 rounded-full rarity-{{ printing.rarity.value }}"></span>
                                             {{ printing.set.code|upper }} #{{ printing.collectorNumber }}
+                                            {% if line.condition.value != 'near_mint' %}<span title="{{ line.condition.label }}">· {{ line.condition.abbreviation }}</span>{% endif %}
                                             <span class="ml-auto text-ink-300">{{ line.unitPrice is not null ? line.unitPrice|format_currency('EUR', locale: 'fr') : '—' }}</span>
                                         </p>
                                     </li>
@@ -124,6 +130,13 @@
                             </ul>
                         </section>
                     {% endfor %}
+                </div>
+            {% endif %}
+            {% if this.hasMore %}
+                <div class="mt-8 text-center">
+                    <button type="button" class="btn btn-ghost" data-action="live#action" data-live-action-param="more">
+                        Voir plus de cartes <span class="text-ink-500">({{ limit }} sur {{ this.lines|length }} lignes)</span>
+                    </button>
                 </div>
             {% endif %}
         </div>

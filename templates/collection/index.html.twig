@@ -5,13 +5,17 @@
 {% block body %}
     <div class="flex flex-wrap items-center justify-between gap-4">
         <h1 class="text-3xl uppercase">Mes collections</h1>
-        <a href="{{ path('app_collection_new') }}" class="btn btn-primary">+ Nouvelle collection</a>
+        <div class="flex flex-wrap gap-2">
+            <a href="{{ path('app_collection_import') }}" class="btn btn-ghost">Importer un CSV ManaBox</a>
+            <a href="{{ path('app_collection_new') }}" class="btn btn-primary">+ Nouvelle collection</a>
+        </div>
     </div>
 
     {% if collections is empty %}
         <div class="panel mt-8 border-dashed p-10 text-center text-ink-300">
             Tu n'as pas encore de collection. <a href="{{ path('app_collection_new') }}" class="font-semibold text-neon-cyan hover:underline">Crée la première</a>,
-            ou ajoute une carte depuis sa fiche (recherche, éditions, spoilers) ou tout un deck depuis sa page.
+            ou ajoute une carte depuis sa fiche (recherche, éditions, spoilers), tout un deck depuis sa page,
+            ou <a href="{{ path('app_collection_import') }}" class="font-semibold text-neon-cyan hover:underline">importe ta collection ManaBox</a> (CSV).
         </div>
     {% else %}
         <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

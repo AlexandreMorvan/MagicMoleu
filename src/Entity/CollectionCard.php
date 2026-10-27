@@ -2,13 +2,16 @@
 
 namespace App\Entity;
 
+use App\Enum\CardCondition;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * Exemplaires d'une impression dans une collection ; les foils ont leur propre ligne (leur prix diffère).
+ * Exemplaires d'une impression dans une collection. Une ligne par finition (normale / foil, leur prix diffère),
+ * langue et état : deux exemplaires ne se cumulent que s'ils sont identiques sur ces points.
  */
 #[ORM\Entity]
-#[ORM\UniqueConstraint(name: 'uniq_collection_printing_foil', columns: ['collection_id', 'printing_id', 'foil'])]
+#[ORM\UniqueConstraint(name: 'uniq_collection_card_copy', columns: ['collection_id', 'printing_id', 'foil', 'lang', 'card_condition'])]
 class CollectionCard
 {
     #[ORM\Id]
@@ -33,9 +36,23 @@ class CollectionCard
 
         #[ORM\Column(options: ['default' => false])]
         private bool $foil = false,
+
+        /** Langue de l'exemplaire (code Scryfall : en, fr, ja…) ; l'image et le prix restent ceux de l'impression. */
+        #[ORM\Column(length: 5, options: ['default' => 'en'])]
+        private string $lang = 'en',
+
+        #[ORM\Column(name: 'card_condition', length: 15, enumType: CardCondition::class, options: ['default' => 'near_mint'])]
+        private CardCondition $condition = CardCondition::NearMint,
     ) {
         $this->addedAt = new \DateTimeImmutable();
     }
+
+    /** Prix d'achat unitaire, dans la devise {@see $purchaseCurrency}. */
+    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2, nullable: true)]
+    private ?string $purchasePrice = null;
+
+    #[ORM\Column(length: 3, nullable: true)]
+    private ?string $purchaseCurrency = null;
 
     public function getId(): ?int
     {
@@ -77,6 +94,71 @@ class CollectionCard
     public function getAddedAt(): \DateTimeImmutable
     {
         return $this->addedAt;
+    }
+
+    public function setAddedAt(\DateTimeImmutable $addedAt): static
+    {
+        $this->addedAt = $addedAt;
+
+        return $this;
+    }
+
+    public function getLang(): string
+    {
+        return $this->lang;
+    }
+
+    public function getCondition(): CardCondition
+    {
+        return $this->condition;
+    }
+
+    public function getPurchasePrice(): ?float
+    {
+        return null !== $this->purchasePrice ? (float) $this->purchasePrice : null;
+    }
+
+    public function getPurchaseCurrency(): ?string
+    {
+        return $this->purchaseCurrency;
+    }
+
+    public function setPurchasePrice(?float $price, ?string $currency): static
+    {
+        $this->purchasePrice = null !== $price ? number_format($price, 2, '.', '') : null;
+        $this->purchaseCurrency = null !== $price ? (strtoupper((string) $currency) ?: 'EUR') : null;
+
+        return $this;
+    }
+
+    /**
+     * Enregistre le prix d'achat de $added exemplaires qui viennent d'être ajoutés à la ligne :
+     * avec des exemplaires déjà achetés dans la même devise, le prix devient la moyenne pondérée.
+     */
+    public function recordPurchase(int $added, ?float $price, ?string $currency): void
+    {
+        if (null === $price) {
+            return;
+        }
+
+        $currency = strtoupper((string) $currency) ?: 'EUR';
+        $previous = $this->getPurchasePrice();
+        $previousQuantity = $this->quantity - $added;
+        if (null !== $previous && $previousQuantity > 0 && $this->purchaseCurrency === $currency) {
+            $price = ($previous * $previousQuantity + $price * $added) / $this->quantity;
+        }
+
+        $this->setPurchasePrice($price, $currency);
+    }
+
+    /**
+     * Prix d'achat total en euros, null s'il est inconnu ou dans une autre devise.
+     */
+    public function getTotalPurchasePriceEur(): ?float
+    {
+        $price = $this->getPurchasePrice();
+
+        return null !== $price && 'EUR' === $this->purchaseCurrency ? $price * $this->quantity : null;
     }
 
     /**

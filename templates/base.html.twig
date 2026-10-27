@@ -72,7 +72,7 @@
         <main class="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 sm:py-12" data-turbo-prefetch="false">
             {% for type, messages in app.flashes %}
                 {% for message in messages %}
-                    <div class="panel mb-6 border-l-4 px-4 py-3 {{ type == 'error' ? 'border-l-mana-r' : 'border-l-neon-cyan' }}">{{ message }}</div>
+                    <div class="panel mb-6 border-l-4 px-4 py-3 {{ {error: 'border-l-mana-r', warning: 'border-l-amber-400'}[type] ?? 'border-l-neon-cyan' }}">{{ message }}</div>
                 {% endfor %}
             {% endfor %}
 

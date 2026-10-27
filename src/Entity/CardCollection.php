@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Repository\CardCollectionRepository;
+use App\Enum\CardCondition;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
@@ -112,26 +113,36 @@ class CardCollection
         return array_sum($this->cards->map(static fn (CollectionCard $c) => $c->getQuantity())->toArray());
     }
 
-    public function findCard(CardPrinting $printing, bool $foil): ?CollectionCard
+    public function findCard(CardPrinting $printing, bool $foil, string $lang = 'en', CardCondition $condition = CardCondition::NearMint): ?CollectionCard
     {
-        return $this->cards->findFirst(static fn (int $k, CollectionCard $c) => $c->getPrinting() === $printing && $c->isFoil() === $foil);
+        return $this->cards->findFirst(static fn (int $k, CollectionCard $c) => $c->getPrinting() === $printing && $c->isFoil() === $foil
+            && $c->getLang() === $lang && $c->getCondition() === $condition);
     }
 
     /**
-     * Ajoute des exemplaires d'une impression (en cumulant avec une ligne existante).
+     * Ajoute des exemplaires d'une impression (en cumulant avec une ligne identique : finition, langue et état).
      */
-    public function addCard(CardPrinting $printing, int $quantity = 1, bool $foil = false): CollectionCard
+    public function addCard(CardPrinting $printing, int $quantity = 1, bool $foil = false, string $lang = 'en', CardCondition $condition = CardCondition::NearMint): CollectionCard
     {
-        $collectionCard = $this->findCard($printing, $foil);
+        $collectionCard = $this->findCard($printing, $foil, $lang, $condition);
         if ($collectionCard) {
             $collectionCard->setQuantity($collectionCard->getQuantity() + $quantity);
         } else {
-            $collectionCard = new CollectionCard($this, $printing, max(1, $quantity), $foil);
+            $collectionCard = new CollectionCard($this, $printing, max(1, $quantity), $foil, $lang, $condition);
             $this->cards->add($collectionCard);
         }
         $this->touch();
 
         return $collectionCard;
+    }
+
+    /**
+     * Retire toutes les cartes (import CSV en mode « remplacer »).
+     */
+    public function clearCards(): void
+    {
+        $this->cards->clear();
+        $this->touch();
     }
 
     public function removeCard(CollectionCard $collectionCard): void

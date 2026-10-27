@@ -20,6 +20,9 @@ final readonly class CollectionStats
      * @param array<string, array{group: ColorGroup, count: int}>                     $colors     par groupe de couleur (ordre de l'enum), groupes absents exclus
      * @param list<array{name: string, code: string, iconSvgUri: ?string, count: int}> $sets       éditions les plus représentées
      * @param list<CollectionCard>                                                    $mostValuable lignes de plus grande valeur unitaire
+     * @param ?float                                                                  $purchaseValue          prix d'achat total (en euros) des cartes dont il est connu
+     * @param ?float                                                                  $purchasedCurrentValue  valeur actuelle de ces mêmes cartes
+     * @param array<string, int>                                                      $languages  nombre de cartes par langue, de la plus représentée à la moins représentée
      */
     public function __construct(
         public int $cardCount,
@@ -31,6 +34,9 @@ final readonly class CollectionStats
         public array $colors,
         public array $sets,
         public array $mostValuable,
+        public ?float $purchaseValue = null,
+        public ?float $purchasedCurrentValue = null,
+        public array $languages = [],
     ) {
     }
 
@@ -48,6 +54,8 @@ final readonly class CollectionStats
         $oracleIds = [];
         $cardCount = $foilCount = $unpricedCount = 0;
         $value = 0.0;
+        $purchaseValue = $purchasedCurrentValue = null;
+        $languages = [];
 
         /** @var CollectionCard $line */
         foreach ($collection->getCards() as $line) {
@@ -62,6 +70,12 @@ final readonly class CollectionStats
             }
             $value += $line->getTotalPrice();
 
+            if (null !== $paid = $line->getTotalPurchasePriceEur()) {
+                $purchaseValue = ($purchaseValue ?? 0) + $paid;
+                $purchasedCurrentValue = ($purchasedCurrentValue ?? 0) + $line->getTotalPrice();
+            }
+            $languages[$line->getLang()] = ($languages[$line->getLang()] ?? 0) + $quantity;
+
             $rarities[$printing->getRarity()->value]['count'] += $quantity;
             $rarities[$printing->getRarity()->value]['value'] += $line->getTotalPrice();
             $colors[ColorGroup::of($printing->getOracleCard())->value]['count'] += $quantity;
@@ -71,6 +85,7 @@ final readonly class CollectionStats
             $sets[$set->getCode()]['count'] += $quantity;
         }
 
+        arsort($languages);
         usort($sets, static fn (array $a, array $b) => [$b['count'], $a['name']] <=> [$a['count'], $b['name']]);
 
         $priced = array_filter($collection->getCards()->toArray(), static fn (CollectionCard $c) => null !== $c->getUnitPrice());
@@ -86,7 +101,18 @@ final readonly class CollectionStats
             colors: array_filter($colors, static fn (array $c) => $c['count'] > 0),
             sets: \array_slice($sets, 0, self::TOP),
             mostValuable: \array_slice($priced, 0, self::TOP),
+            purchaseValue: null !== $purchaseValue ? round($purchaseValue, 2) : null,
+            purchasedCurrentValue: null !== $purchasedCurrentValue ? round($purchasedCurrentValue, 2) : null,
+            languages: $languages,
         );
+    }
+
+    /**
+     * Plus-value (ou moins-value) des cartes dont le prix d'achat est connu : valeur actuelle moins prix d'achat.
+     */
+    public function gain(): ?float
+    {
+        return null !== $this->purchaseValue ? round($this->purchasedCurrentValue - $this->purchaseValue, 2) : null;
     }
 
     /**

@@ -36,22 +36,31 @@ class CollectionBrowser extends AbstractController
     #[LiveProp]
     public int $collectionId;
 
-    #[LiveProp(writable: true, url: true)]
+    #[LiveProp(writable: true, url: true, onUpdated: 'resetLimit')]
     public string $query = '';
 
     #[LiveProp(writable: true, url: true)]
     public string $view = 'grid';
 
-    #[LiveProp(writable: true, url: true)]
+    #[LiveProp(writable: true, url: true, onUpdated: 'resetLimit')]
     public string $sort = 'name';
 
-    #[LiveProp(writable: true, url: true)]
+    #[LiveProp(writable: true, url: true, onUpdated: 'resetLimit')]
     public string $rarity = '';
 
-    #[LiveProp(writable: true, url: true)]
+    #[LiveProp(writable: true, url: true, onUpdated: 'resetLimit')]
     public string $color = '';
 
+    /** Nombre de lignes affichées : une grande collection (import ManaBox) se parcourt par pages. */
+    #[LiveProp]
+    public int $limit = self::PAGE_SIZE;
+
+    private const int PAGE_SIZE = 120;
+
     private ?CardCollection $collection = null;
+
+    /** @var list<CollectionCard>|null */
+    private ?array $lines = null;
 
     public function __construct(
         private readonly CardCollectionRepository $collections,
@@ -82,6 +91,30 @@ class CollectionBrowser extends AbstractController
      * @return list<CollectionCard>
      */
     public function getLines(): array
+    {
+        return $this->lines ??= $this->filterAndSort();
+    }
+
+    public function hasMore(): bool
+    {
+        return \count($this->getLines()) > $this->limit;
+    }
+
+    public function resetLimit(): void
+    {
+        $this->limit = self::PAGE_SIZE;
+    }
+
+    #[LiveAction]
+    public function more(): void
+    {
+        $this->limit += self::PAGE_SIZE;
+    }
+
+    /**
+     * @return list<CollectionCard>
+     */
+    private function filterAndSort(): array
     {
         $query = mb_strtolower(trim($this->query));
         $rarity = Rarity::tryFrom($this->rarity);
@@ -127,8 +160,9 @@ class CollectionBrowser extends AbstractController
             default => static fn (CollectionCard $l) => 'all',
         };
 
+        // Les en-têtes comptent toute la section ; seules les $limit premières lignes sont affichées
         $sections = [];
-        foreach ($this->getLines() as $line) {
+        foreach ($this->getLines() as $index => $line) {
             $key = $keyOf($line);
             if (!isset($sections[$key])) {
                 $set = 'set' === $this->sort ? $line->getPrinting()->getSet() : null;
@@ -148,10 +182,12 @@ class CollectionBrowser extends AbstractController
             }
             $sections[$key]['count'] += $line->getQuantity();
             $sections[$key]['value'] += $line->getTotalPrice();
-            $sections[$key]['lines'][] = $line;
+            if ($index < $this->limit) {
+                $sections[$key]['lines'][] = $line;
+            }
         }
 
-        return array_values($sections);
+        return array_values(array_filter($sections, static fn (array $section) => [] !== $section['lines']));
     }
 
     /** Tranches de prix unitaire (borne basse en euros => libellé), de la plus chère à la moins chère. */
@@ -209,6 +245,7 @@ class CollectionBrowser extends AbstractController
     {
         $this->builder->changeQuantity($this->findLine($lineId), $delta);
         $this->em->flush();
+        $this->lines = null;
     }
 
     #[LiveAction]
@@ -216,6 +253,7 @@ class CollectionBrowser extends AbstractController
     {
         $this->getCollection()->removeCard($this->findLine($lineId));
         $this->em->flush();
+        $this->lines = null;
     }
 
     private function findLine(int $id): CollectionCard
