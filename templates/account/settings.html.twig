@@ -35,7 +35,7 @@
                 {{ form_start(identity, {attr: {class: 'mt-4 max-w-lg', novalidate: 'novalidate'}}) }}
                     {{ form_row(identity.username) }}
                     {{ form_row(identity.email) }}
-                    {{ form_row(identity.currentPassword, {help: 'Nécessaire pour modifier ton pseudo ou ton email.'}) }}
+                    {{ form_row(identity.currentPassword, {help: 'Nécessaire pour modifier ton email.'}) }}
                     <button type="submit" class="btn btn-primary">Enregistrer</button>
                 {{ form_end(identity) }}
             </section>
