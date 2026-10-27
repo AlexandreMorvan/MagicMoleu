@@ -41,7 +41,7 @@ class CardCollectionRepository extends ServiceEntityRepository
     }
 
     /**
-     * Collections d'un utilisateur avec leurs cartes (pour les vignettes : nombre, valeur, illustration).
+     * Collections d'un utilisateur avec leurs cartes, impressions et éditions (vignettes : nombre, valeur, statistiques).
      *
      * @return list<CardCollection>
      */
@@ -50,6 +50,7 @@ class CardCollectionRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('c')
             ->leftJoin('c.cards', 'cc')->addSelect('cc')
             ->leftJoin('cc.printing', 'p')->addSelect('p')
+            ->leftJoin('p.set', 's')->addSelect('s')
             ->leftJoin('p.oracleCard', 'o')->addSelect('o')
             ->where('c.owner = :owner')
             ->setParameter('owner', $owner)

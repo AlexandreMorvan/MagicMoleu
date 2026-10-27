@@ -21,7 +21,7 @@
         {{ form_end(form) }}
 
         {% if deck %}
-            <form method="post" action="{{ path('app_deck_delete', {id: deck.id}) }}" class="mt-6 text-right" data-turbo-confirm="Supprimer définitivement ce deck ?">
+            <form method="post" action="{{ path('app_deck_delete', {id: deck.id}) }}" class="mt-6 text-right" data-turbo-confirm="Supprimer le deck « {{ deck.name }} » ?" data-confirm-text="Cette action est définitive." data-confirm-button="Supprimer">
                 <input type="hidden" name="_token" value="{{ csrf_token('delete-deck-' ~ deck.id) }}">
                 <button type="submit" class="text-sm font-semibold text-mana-r hover:underline">Supprimer ce deck</button>
             </form>
