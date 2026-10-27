@@ -1,0 +1,1 @@
+{% if field.value %}<img src="{{ asset(field.value) }}" alt="" loading="lazy" style="height: {{ ea().crud.currentAction == 'detail' ? '120px' : '32px' }}; max-width: 160px; object-fit: contain">{% endif %}

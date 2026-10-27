@@ -14,6 +14,10 @@ use App\Repository\NotificationRepository;
 use App\Scryfall\CardImporter;
 use App\Scryfall\JsonlReader;
 use App\Scryfall\SetCoverUpdater;
+use App\Set\SetLogoStorage;
+use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\HttpClient\MockHttpClient;
+use Symfony\Component\HttpClient\Response\MockResponse;
 use Symfony\Component\Console\Messenger\RunCommandMessage;
 use Symfony\Component\Lock\LockFactory;
 use Symfony\Component\Messenger\Transport\InMemory\InMemoryTransport;
@@ -100,6 +104,70 @@ class AdminTest extends WebTestCase
         $set = $em->getRepository(MtgSet::class)->findOneBy(['code' => 'm10']);
         self::assertTrue($set->isCoverLocked());
         self::assertSame('Mon choix', $set->getCoverCardName());
+    }
+
+    public function testSetLogoFromUrlOrUploadedFile(): void
+    {
+        $publicDir = sys_get_temp_dir().'/set-logos-'.bin2hex(random_bytes(4));
+        $image = imagecreatetruecolor(12, 4);
+        ob_start();
+        imagepng($image);
+        $storage = new SetLogoStorage(new MockHttpClient(new MockResponse(ob_get_clean())), new Filesystem(), $publicDir);
+
+        $this->client->disableReboot();
+        self::getContainer()->set(SetLogoStorage::class, $storage);
+        $this->client->loginUser($this->admin);
+        $set = self::getContainer()->get(EntityManagerInterface::class)->getRepository(MtgSet::class)->findOneBy(['code' => 'm10']);
+
+        $this->client->request('GET', $this->adminUrl(MtgSetCrudController::class, 'edit', (string) $set->getId()));
+        $this->client->submitForm('Sauvegarder les modifications', ['MtgSet[logoSourceUrl]' => 'https://8.8.8.8/m10-logo.png']);
+        self::assertResponseRedirects();
+
+        $crawler = $this->client->request('GET', '/editions/m10');
+        $logo = $crawler->filter('h1 img');
+        self::assertSame('Magic 2010', $logo->attr('alt'));
+        self::assertMatchesRegularExpression('#/uploads/sets/m10-[0-9a-f]{10}\.png$#', $logo->attr('src'));
+
+        // Une URL refusée garde le logo actuel et prévient l'administrateur
+        $this->client->request('GET', $this->adminUrl(MtgSetCrudController::class, 'edit', (string) $set->getId()));
+        $this->client->submitForm('Sauvegarder les modifications', ['MtgSet[logoSourceUrl]' => 'http://8.8.8.8/autre.png']);
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('body', 'Logo non enregistré');
+        self::assertSelectorExists('img[src*="/uploads/sets/m10-"]');
+
+        // Envoi d'un fichier (enregistré depuis un site protégé contre les robots, par exemple)
+        $file = tempnam(sys_get_temp_dir(), 'logo');
+        $image = imagecreatetruecolor(30, 8);
+        imagepng($image, $file);
+        $this->client->request('GET', $this->adminUrl(MtgSetCrudController::class, 'edit', (string) $set->getId()));
+        $form = $this->client->getCrawler()->selectButton('Sauvegarder les modifications')->form();
+        $form['MtgSet[logoFile]']->upload($file);
+        $this->client->submit($form);
+        self::assertResponseRedirects();
+        $this->client->request('GET', '/editions/m10');
+        self::assertSelectorExists('h1 img[src*="/uploads/sets/m10-"]');
+        $uploaded = $this->client->getCrawler()->filter('h1 img')->attr('src');
+        self::assertNotSame($logo->attr('src'), $uploaded, 'le fichier envoyé remplace le logo téléchargé');
+
+        // Un fichier qui n'est pas une image est refusé par le formulaire
+        file_put_contents($file, '<svg xmlns="http://www.w3.org/2000/svg"/>');
+        $this->client->request('GET', $this->adminUrl(MtgSetCrudController::class, 'edit', (string) $set->getId()));
+        $form = $this->client->getCrawler()->selectButton('Sauvegarder les modifications')->form();
+        $form['MtgSet[logoFile]']->upload($file);
+        $this->client->submit($form);
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorTextContains('body', 'Envoie une image PNG, WebP ou JPEG.');
+
+        // La case « Supprimer le logo »
+        $this->client->request('GET', $this->adminUrl(MtgSetCrudController::class, 'edit', (string) $set->getId()));
+        $this->client->submitForm('Sauvegarder les modifications', ['MtgSet[removeLogo]' => '1']);
+        $this->client->request('GET', '/editions/m10');
+        self::assertSelectorNotExists('h1 img');
+        self::assertSelectorTextContains('h1', 'Magic 2010');
+
+        unlink($file);
+
+        (new Filesystem())->remove($publicDir);
     }
 
     public function testAdminCanSendNotification(): void
