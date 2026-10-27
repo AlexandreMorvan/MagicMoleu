@@ -12,7 +12,7 @@
     <div class="p-4">
         <p class="truncate font-display text-lg font-bold text-white">{{ deck.name }}</p>
         <p class="text-xs text-ink-500">
-            {% if show_owner %}par {{ deck.owner.username }} · {% endif %}modifié le {{ deck.updatedAt|format_date('short', locale: 'fr') }}
+            {% if show_owner %}<span class="inline-flex items-center gap-1 align-middle"><twig:Avatar :user="deck.owner" size="h-4 w-4 text-[0.5rem]" />{{ deck.owner.username }}</span> · {% endif %}modifié le {{ deck.updatedAt|format_date('short', locale: 'fr') }}
         </p>
     </div>
 </a>

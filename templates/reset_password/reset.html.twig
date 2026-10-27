@@ -1,0 +1,15 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nouveau mot de passe{% endblock %}
+
+{% block body %}
+    <div class="mx-auto max-w-md">
+        <h1 class="text-3xl uppercase">Nouveau mot de passe</h1>
+
+        {{ form_start(form, {attr: {class: 'panel mt-8 p-6 sm:p-8', novalidate: 'novalidate'}}) }}
+            {{ form_row(form.plainPassword.first) }}
+            {{ form_row(form.plainPassword.second) }}
+            <button type="submit" class="btn btn-primary w-full">Enregistrer le mot de passe</button>
+        {{ form_end(form) }}
+    </div>
+{% endblock %}

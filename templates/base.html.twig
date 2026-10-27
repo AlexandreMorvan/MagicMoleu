@@ -46,14 +46,22 @@
                             <a href="{{ path('admin') }}" class="nav-link hidden sm:inline-block" data-turbo="false">Admin</a>
                         {% endif %}
                         <twig:NotificationBell />
-                        <a href="{{ path('app_profile') }}" class="nav-link {{ route == 'app_profile' ? 'nav-link-active' }} flex items-center gap-2">
-                            <span class="grid h-7 w-7 place-items-center rounded-full bg-ink-700 text-xs text-white">{{ app.user.username|first|upper }}</span>
-                            <span class="hidden sm:inline">{{ app.user.username }}</span>
-                        </a>
-                        <form method="post" action="{{ path('app_logout') }}" data-turbo="false">
-                            <input type="hidden" name="_csrf_token" data-controller="csrf-protection" value="{{ csrf_token('logout') }}">
-                            <button type="submit" class="btn btn-ghost">Déconnexion</button>
-                        </form>
+                        {# Menu du compte #}
+                        <details class="relative" data-controller="dropdown" data-action="click@window->dropdown#closeOutside keydown.esc@window->dropdown#close">
+                            <summary class="nav-link {{ route in ['app_profile', 'app_account'] ? 'nav-link-active' }} flex cursor-pointer list-none items-center gap-2">
+                                <twig:Avatar :user="app.user" size="h-7 w-7 text-xs" />
+                                <span class="hidden sm:inline">{{ app.user.username }}</span>
+                            </summary>
+                            <div class="panel absolute right-0 z-50 mt-2 w-56 overflow-hidden py-1 text-sm shadow-2xl shadow-black/60">
+                                <a href="{{ path('app_profile') }}" class="block px-4 py-2 text-ink-100 hover:bg-ink-800 hover:text-white">Mes succès et decks</a>
+                                <a href="{{ path('app_player', {username: app.user.username}) }}" class="block px-4 py-2 text-ink-100 hover:bg-ink-800 hover:text-white">Mon profil public</a>
+                                <a href="{{ path('app_account') }}" class="block px-4 py-2 text-ink-100 hover:bg-ink-800 hover:text-white">Mon compte</a>
+                                <form method="post" action="{{ path('app_logout') }}" data-turbo="false" class="border-t border-ink-800">
+                                    <input type="hidden" name="_csrf_token" data-controller="csrf-protection" value="{{ csrf_token('logout') }}">
+                                    <button type="submit" class="block w-full px-4 py-2 text-left text-ink-300 hover:bg-ink-800 hover:text-white">Déconnexion</button>
+                                </form>
+                            </div>
+                        </details>
                     {% else %}
                         <a href="{{ path('app_login') }}" class="nav-link {{ route == 'app_login' ? 'nav-link-active' }}">Connexion</a>
                         <a href="{{ path('app_register') }}" class="btn btn-primary">Créer un compte</a>
@@ -79,7 +87,7 @@
             {% block body %}{% endblock %}
         </main>
 
-        {% if app.user %}<twig:NotificationToasts />{% endif %}
+        {% if app.user and app.user.wantsNotificationToasts %}<twig:NotificationToasts />{% endif %}
 
         {# Modale de fiche carte : les liens ciblant la frame « card_modal » s'y affichent #}
         <dialog class="card-modal m-auto w-[min(64rem,calc(100vw-2rem))] max-h-[calc(100vh-2rem)] overflow-y-auto rounded-2xl border border-ink-700 bg-ink-850 p-0 text-ink-100 shadow-2xl shadow-black/60"

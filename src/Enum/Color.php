@@ -50,6 +50,30 @@ enum Color: string
         return $mask;
     }
 
+    /** Noms des combinaisons de deux et trois couleurs (guildes de Ravnica, fragments d'Alara, clans de Tarkir). */
+    private const array COMBINATIONS = [
+        3 => 'Azorius', 6 => 'Dimir', 12 => 'Rakdos', 24 => 'Gruul', 17 => 'Selesnya',
+        5 => 'Orzhov', 10 => 'Izzet', 20 => 'Golgari', 9 => 'Boros', 18 => 'Simic',
+        19 => 'Bant', 7 => 'Esper', 14 => 'Grixis', 28 => 'Jund', 25 => 'Naya',
+        21 => 'Abzan', 11 => 'Jeskai', 22 => 'Sultai', 13 => 'Mardu', 26 => 'Temur',
+    ];
+
+    /**
+     * Nom d'une combinaison de couleurs : « Rouge », « Izzet », « Esper », « Quatre couleurs »… null sans couleur.
+     */
+    public static function combinationName(int $mask): ?string
+    {
+        $colors = self::fromMask($mask);
+
+        return match (\count($colors)) {
+            0 => null,
+            1 => $colors[0]->label(),
+            4 => 'Quatre couleurs',
+            5 => 'Cinq couleurs',
+            default => self::COMBINATIONS[$mask] ?? null,
+        };
+    }
+
     /**
      * @return list<self> dans l'ordre WUBRG
      */

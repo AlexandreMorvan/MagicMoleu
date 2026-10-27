@@ -69,4 +69,32 @@ class OracleCardRepository extends ServiceEntityRepository
             ->getQuery()
             ->getOneOrNullResult();
     }
+
+    /**
+     * Planeswalkers proposés comme avatar (avec une illustration), filtrés par nom (anglais ou français) et couleur.
+     *
+     * @return list<OracleCard>
+     */
+    public function findAvatarCandidates(string $query = '', int $colorMask = 0, int $limit = 48): array
+    {
+        $qb = $this->createQueryBuilder('o')
+            ->leftJoin('o.localizations', 'l', 'WITH', 'l.lang = :lang')
+            ->where('o.typeLine LIKE :type')
+            ->andWhere('o.artCropUri IS NOT NULL')
+            ->andWhere('o.layout NOT IN (:excluded)')
+            ->setParameter('lang', 'fr')
+            ->setParameter('type', '%Planeswalker%')
+            ->setParameter('excluded', self::NON_GAME_LAYOUTS)
+            ->orderBy('o.name', SortDirection::Ascending)
+            ->setMaxResults($limit);
+
+        if ('' !== $query = trim($query)) {
+            $qb->andWhere('o.name LIKE :name OR l.printedName LIKE :name')->setParameter('name', '%'.addcslashes($query, '%_\\').'%');
+        }
+        if ($colorMask) {
+            $qb->andWhere('BIT_AND(o.colors, :mask) != 0')->setParameter('mask', $colorMask);
+        }
+
+        return $qb->getQuery()->getResult();
+    }
 }

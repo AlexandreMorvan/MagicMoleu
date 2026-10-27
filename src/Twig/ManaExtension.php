@@ -2,7 +2,9 @@
 
 namespace App\Twig;
 
+use App\Enum\Color;
 use Twig\Attribute\AsTwigFilter;
+use Twig\Attribute\AsTwigFunction;
 
 class ManaExtension
 {
@@ -31,5 +33,14 @@ class ManaExtension
         }, htmlspecialchars($text, \ENT_QUOTES | \ENT_SUBSTITUTE, 'UTF-8'));
 
         return nl2br($html, false);
+    }
+
+    /**
+     * Nom d'une combinaison de couleurs (bitmask WUBRG) : « Izzet », « Esper », « Rouge »…
+     */
+    #[AsTwigFunction('color_combination_name')]
+    public function colorCombinationName(int $mask): ?string
+    {
+        return Color::combinationName($mask);
     }
 }

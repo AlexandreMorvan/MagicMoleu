@@ -2,6 +2,9 @@
 
 namespace App\Entity;
 
+use App\Enum\Color;
+use App\Enum\DeckView;
+use App\Enum\Format;
 use App\Repository\UserRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
@@ -47,6 +50,35 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     #[ORM\Column]
     private ?string $password = null;
+
+    /** Avatar : illustration d'un planeswalker choisi dans « Mon compte » ; null = initiale du pseudo. */
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(onDelete: 'SET NULL')]
+    private ?OracleCard $avatarCard = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[Assert\Length(max: 500, maxMessage: 'Ta présentation ne peut pas dépasser {{ limit }} caractères.')]
+    private ?string $bio = null;
+
+    /** Couleurs favorites en bitmask WUBRG ({@see Color}) : une couleur, une guilde, un clan… */
+    #[ORM\Column(type: Types::SMALLINT, options: ['default' => 0])]
+    private int $favoriteColors = 0;
+
+    /** Format préféré, proposé par défaut à la création d'un deck. */
+    #[ORM\Column(length: 20, nullable: true, enumType: Format::class)]
+    private ?Format $preferredFormat = null;
+
+    /** Afficher les notifications en toast (sinon, seulement dans la cloche). */
+    #[ORM\Column(options: ['default' => true])]
+    private bool $notificationToasts = true;
+
+    #[ORM\Column(length: 12, enumType: DeckView::class, options: ['default' => 'liste'])]
+    private DeckView $defaultDeckView = DeckView::List;
+
+    /** Vue par défaut d'une collection : grid (vignettes) ou list. */
+    #[ORM\Column(length: 10, options: ['default' => 'grid'])]
+    #[Assert\Choice(choices: ['grid', 'list'])]
+    private string $defaultCollectionView = 'grid';
 
     public function __construct()
     {
@@ -143,6 +175,101 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $data["\0".self::class."\0password"] = hash('crc32c', $this->password);
 
         return $data;
+    }
+
+    public function getAvatarCard(): ?OracleCard
+    {
+        return $this->avatarCard;
+    }
+
+    public function setAvatarCard(?OracleCard $avatarCard): static
+    {
+        $this->avatarCard = $avatarCard;
+
+        return $this;
+    }
+
+    public function getBio(): ?string
+    {
+        return $this->bio;
+    }
+
+    public function setBio(?string $bio): static
+    {
+        $this->bio = null !== $bio && '' !== trim($bio) ? trim($bio) : null;
+
+        return $this;
+    }
+
+    public function getFavoriteColors(): int
+    {
+        return $this->favoriteColors;
+    }
+
+    /**
+     * @return list<Color>
+     */
+    public function getFavoriteColorList(): array
+    {
+        return Color::fromMask($this->favoriteColors);
+    }
+
+    /**
+     * @param iterable<Color> $colors
+     */
+    public function setFavoriteColorList(iterable $colors): static
+    {
+        $this->favoriteColors = Color::maskFrom($colors);
+
+        return $this;
+    }
+
+    public function getPreferredFormat(): ?Format
+    {
+        return $this->preferredFormat;
+    }
+
+    public function setPreferredFormat(?Format $preferredFormat): static
+    {
+        $this->preferredFormat = $preferredFormat;
+
+        return $this;
+    }
+
+    public function wantsNotificationToasts(): bool
+    {
+        return $this->notificationToasts;
+    }
+
+    public function setNotificationToasts(bool $notificationToasts): static
+    {
+        $this->notificationToasts = $notificationToasts;
+
+        return $this;
+    }
+
+    public function getDefaultDeckView(): DeckView
+    {
+        return $this->defaultDeckView;
+    }
+
+    public function setDefaultDeckView(DeckView $defaultDeckView): static
+    {
+        $this->defaultDeckView = $defaultDeckView;
+
+        return $this;
+    }
+
+    public function getDefaultCollectionView(): string
+    {
+        return $this->defaultCollectionView;
+    }
+
+    public function setDefaultCollectionView(string $defaultCollectionView): static
+    {
+        $this->defaultCollectionView = $defaultCollectionView;
+
+        return $this;
     }
 
     public function __toString(): string

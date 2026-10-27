@@ -1,0 +1,10 @@
+{# Avatar d'un utilisateur : illustration du planeswalker choisi, sinon initiale du pseudo.
+   Props : user, size (classes de taille), rounded (classe d'arrondi) #}
+{% props user, size = 'h-8 w-8 text-xs', rounded = 'rounded-full' %}
+{% set card = user.avatarCard %}
+{% if card and card.artCropUri %}
+    <img src="{{ card.artCropUri }}" alt="" title="{{ card.name }}" loading="lazy"
+         {{ attributes.defaults({class: size ~ ' ' ~ rounded ~ ' shrink-0 object-cover ring-1 ring-white/15'}) }}>
+{% else %}
+    <span {{ attributes.defaults({class: size ~ ' ' ~ rounded ~ ' grid shrink-0 place-items-center bg-gradient-to-br from-neon-violet to-neon-cyan font-display font-bold text-ink-950'}) }}>{{ user.username|first|upper }}</span>
+{% endif %}

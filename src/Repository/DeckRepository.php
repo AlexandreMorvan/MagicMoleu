@@ -49,10 +49,21 @@ class DeckRepository extends ServiceEntityRepository
     {
         return $this->createQueryBuilder('d')
             ->join('d.owner', 'u')->addSelect('u')
+            ->leftJoin('u.avatarCard', 'a')->addSelect('a')
             ->where('d.public = true')
             ->orderBy('d.updatedAt', SortDirection::Descending)
             ->setMaxResults($limit)
             ->getQuery()
             ->getResult();
+    }
+
+    /**
+     * Decks publics d'un joueur, du plus récemment modifié au plus ancien.
+     *
+     * @return list<Deck>
+     */
+    public function findPublicByOwner(User $owner): array
+    {
+        return $this->findBy(['owner' => $owner, 'public' => true], ['updatedAt' => 'DESC']);
     }
 }

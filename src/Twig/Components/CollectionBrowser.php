@@ -7,6 +7,7 @@ use App\Collection\CollectionStats;
 use App\Entity\CardCollection;
 use App\Entity\CollectionCard;
 use App\Entity\MtgSet;
+use App\Entity\User;
 use App\Enum\ColorGroup;
 use App\Enum\Rarity;
 use App\Repository\CardCollectionRepository;
@@ -67,6 +68,18 @@ class CollectionBrowser extends AbstractController
         private readonly CollectionBuilder $builder,
         private readonly EntityManagerInterface $em,
     ) {
+    }
+
+    /**
+     * Vue par défaut du compte ; une vue passée dans l'URL (?view=) est appliquée ensuite et l'emporte.
+     */
+    public function mount(int $collectionId): void
+    {
+        $this->collectionId = $collectionId;
+        $user = $this->getUser();
+        if ($user instanceof User && isset(self::VIEWS[$user->getDefaultCollectionView()])) {
+            $this->view = $user->getDefaultCollectionView();
+        }
     }
 
     /**
