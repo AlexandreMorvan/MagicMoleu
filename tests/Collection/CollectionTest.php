@@ -265,6 +265,39 @@ class CollectionTest extends WebTestCase
         self::assertCount(0, $crawler->filter('button[data-live-action-param="more"]'));
     }
 
+    public function testDeleteCollectionFromItsPage(): void
+    {
+        $collection = $this->persistCollection(['Lightning Bolt' => 4]);
+        $id = $collection->getId();
+        $this->client->loginUser($this->owner);
+
+        $crawler = $this->client->request('GET', '/collections/'.$id);
+        $form = $crawler->filter('header form[action$="/supprimer"]');
+        // La confirmation (SweetAlert, côté navigateur) est déclenchée par data-turbo-confirm
+        self::assertSame('Supprimer la collection « Classeur » ?', $form->attr('data-turbo-confirm'));
+        self::assertStringContainsString('4 cartes seront retirées avec elle', $form->attr('data-confirm-text'));
+
+        $this->client->submit($form->form());
+        self::assertResponseRedirects('/collections');
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('main', 'La collection « Classeur » a été supprimée.');
+        self::assertNull(self::getContainer()->get(CardCollectionRepository::class)->find($id));
+    }
+
+    public function testCannotDeleteSomeoneElsesCollection(): void
+    {
+        $collection = $this->persistCollection([]);
+        $this->client->loginUser($this->owner);
+        $crawler = $this->client->request('GET', '/collections/'.$collection->getId());
+        $token = $crawler->filter('header form[action$="/supprimer"] input[name="_token"]')->attr('value');
+
+        $this->client->loginUser($this->createUser('Intrus'));
+        $this->client->request('POST', '/collections/'.$collection->getId().'/supprimer', ['_token' => $token]);
+
+        self::assertResponseStatusCodeSame(403);
+        self::assertNotNull(self::getContainer()->get(CardCollectionRepository::class)->find($collection->getId()));
+    }
+
     public function testStats(): void
     {
         $collection = $this->persistCollection(['Lightning Bolt' => 4, 'Counterspell' => 2, 'Jace, the Mind Sculptor' => 1, 'Forest' => 10]);

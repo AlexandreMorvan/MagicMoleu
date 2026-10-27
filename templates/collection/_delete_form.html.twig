@@ -1,0 +1,10 @@
+{# Suppression d'une collection, confirmée par une fenêtre SweetAlert (assets/confirm.js).
+   Variables : collection, form_class, button_class, label #}
+{% set count = collection.cardCount %}
+<form method="post" action="{{ path('app_collection_delete', {id: collection.id}) }}" class="{{ form_class|default('') }}"
+      data-turbo-confirm="Supprimer la collection « {{ collection.name }} » ?"
+      data-confirm-text="{{ count ? (count ~ ' carte' ~ (count > 1 ? 's' : '') ~ ' seront retirée' ~ (count > 1 ? 's' : '') ~ ' avec elle. ') : '' }}Cette action est définitive."
+      data-confirm-button="Supprimer">
+    <input type="hidden" name="_token" value="{{ csrf_token('delete-collection-' ~ collection.id) }}">
+    <button type="submit" class="{{ button_class|default('btn btn-ghost hover:border-mana-r hover:text-mana-r') }}">{{ label|default('Supprimer') }}</button>
+</form>

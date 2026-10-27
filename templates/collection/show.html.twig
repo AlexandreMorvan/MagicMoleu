@@ -19,6 +19,7 @@
             <div class="flex flex-wrap gap-2">
                 <a href="{{ path('app_collection_import', {collection: collection.id}) }}" class="btn btn-ghost">Importer un CSV</a>
                 <a href="{{ path('app_collection_settings', {id: collection.id}) }}" class="btn btn-ghost">Paramètres</a>
+                {{ include('collection/_delete_form.html.twig') }}
                 <a href="{{ path('app_card_search') }}" class="btn btn-primary">+ Ajouter des cartes</a>
             </div>
         </div>

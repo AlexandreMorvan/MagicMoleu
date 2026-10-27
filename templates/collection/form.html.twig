@@ -16,10 +16,7 @@
         {{ form_end(form) }}
 
         {% if collection %}
-            <form method="post" action="{{ path('app_collection_delete', {id: collection.id}) }}" class="mt-6 text-right" data-turbo-confirm="Supprimer définitivement cette collection et toutes ses cartes ?">
-                <input type="hidden" name="_token" value="{{ csrf_token('delete-collection-' ~ collection.id) }}">
-                <button type="submit" class="text-sm font-semibold text-mana-r hover:underline">Supprimer cette collection</button>
-            </form>
+            {{ include('collection/_delete_form.html.twig', {form_class: 'mt-6 text-right', button_class: 'text-sm font-semibold text-mana-r hover:underline', label: 'Supprimer cette collection'}) }}
         {% endif %}
     </div>
 {% endblock %}
