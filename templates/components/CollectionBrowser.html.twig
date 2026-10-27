@@ -142,5 +142,6 @@
         </div>
     </div>
 
-    <aside data-loading="addClass(opacity-60)" class="transition-opacity">{{ include('collection/_sidebar.html.twig', {stats: this.stats}) }}</aside>
+    {# Petit écran : les stats passent avant les filtres et les cartes ; grand écran : colonne de droite #}
+    <aside data-loading="addClass(opacity-60)" class="transition-opacity max-lg:order-first">{{ include('collection/_sidebar.html.twig', {stats: this.stats}) }}</aside>
 </div>
