@@ -1,0 +1,29 @@
+includes:
+    # Extensions déclarées à la main (sans le plugin Composer phpstan/extension-installer)
+    - vendor/phpstan/phpstan-symfony/extension.neon
+    - vendor/phpstan/phpstan-symfony/rules.neon
+    - vendor/phpstan/phpstan-doctrine/extension.neon
+    - vendor/phpstan/phpstan-doctrine/rules.neon
+    - vendor/phpstan/phpstan-phpunit/extension.neon
+    - vendor/phpstan/phpstan-phpunit/rules.neon
+
+parameters:
+    level: 6
+    paths:
+        - bin/
+        - config/
+        - public/
+        - src/
+        - tests/
+    excludePaths:
+        # Généré par Symfony à partir de la configuration
+        - config/reference.php
+    symfony:
+        # Conteneur compilé en dev : il est régénéré par cache:clear ou au premier appel de bin/console
+        containerXmlPath: var/cache/dev/App_KernelDevDebugContainer.xml
+        consoleApplicationLoader: tests/console-application.php
+    doctrine:
+        objectManagerLoader: tests/object-manager.php
+        # User et Notification sont créés vides puis remplis par un formulaire (inscription, admin) :
+        # leurs propriétés obligatoires sont nullables le temps de la saisie, la validation empêche d'enregistrer null.
+        allowNullablePropertyForRequiredField: true

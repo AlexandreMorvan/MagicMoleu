@@ -25,6 +25,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
+use Symfony\Component\DomCrawler\Field\FileFormField;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 class AdminTest extends WebTestCase
@@ -67,6 +68,9 @@ class AdminTest extends WebTestCase
         self::assertResponseIsSuccessful();
     }
 
+    /**
+     * @return iterable<string, array{class-string}>
+     */
     public static function crudControllers(): iterable
     {
         foreach ([UserCrudController::class, DeckCrudController::class, UserAchievementCrudController::class, NotificationCrudController::class, OracleCardCrudController::class, MtgSetCrudController::class] as $controller) {
@@ -141,7 +145,9 @@ class AdminTest extends WebTestCase
         imagepng($image, $file);
         $this->client->request('GET', $this->adminUrl(MtgSetCrudController::class, 'edit', (string) $set->getId()));
         $form = $this->client->getCrawler()->selectButton('Sauvegarder les modifications')->form();
-        $form['MtgSet[logoFile]']->upload($file);
+        $field = $form['MtgSet[logoFile]'];
+        self::assertInstanceOf(FileFormField::class, $field);
+        $field->upload($file);
         $this->client->submit($form);
         self::assertResponseRedirects();
         $this->client->request('GET', '/editions/m10');
@@ -153,7 +159,9 @@ class AdminTest extends WebTestCase
         file_put_contents($file, '<svg xmlns="http://www.w3.org/2000/svg"/>');
         $this->client->request('GET', $this->adminUrl(MtgSetCrudController::class, 'edit', (string) $set->getId()));
         $form = $this->client->getCrawler()->selectButton('Sauvegarder les modifications')->form();
-        $form['MtgSet[logoFile]']->upload($file);
+        $field = $form['MtgSet[logoFile]'];
+        self::assertInstanceOf(FileFormField::class, $field);
+        $field->upload($file);
         $this->client->submit($form);
         self::assertResponseStatusCodeSame(422);
         self::assertSelectorTextContains('body', 'Envoie une image PNG, WebP ou JPEG.');
@@ -252,7 +260,10 @@ class AdminTest extends WebTestCase
 
     private function asyncTransport(): InMemoryTransport
     {
-        return self::getContainer()->get('messenger.transport.async');
+        $transport = self::getContainer()->get('messenger.transport.async');
+        self::assertInstanceOf(InMemoryTransport::class, $transport, 'transport « async » en mémoire en environnement de test');
+
+        return $transport;
     }
 
     private function adminUrl(string $controller, string $action = 'index', ?string $entityId = null): string

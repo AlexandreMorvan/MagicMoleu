@@ -9,6 +9,7 @@ use App\Enum\Format;
 use App\Enum\LegalityStatus;
 use App\Enum\Rarity;
 use App\Repository\OracleCardRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use SortDirection;
@@ -25,8 +26,10 @@ class CardSearch
 
     private int $paramIndex = 0;
 
-    public function __construct(private readonly OracleCardRepository $cards)
-    {
+    public function __construct(
+        private readonly OracleCardRepository $cards,
+        private readonly EntityManagerInterface $em,
+    ) {
     }
 
     public function search(CardSearchCriteria $criteria, int $page = 1, int $perPage = 60): CardSearchResult
@@ -83,7 +86,7 @@ class CardSearch
         $rarities = array_values(array_filter(array_map(Rarity::tryFrom(...), $c->rarities)));
         $set = mb_strtolower(trim($c->set));
         if ($rarities || '' !== $set) {
-            $sub = $this->cards->getEntityManager()->createQueryBuilder()
+            $sub = $this->em->createQueryBuilder()
                 ->select('1')
                 ->from(CardPrinting::class, 'p')
                 ->where('p.oracleCard = o');
@@ -103,7 +106,7 @@ class CardSearch
                 'restricted' => [LegalityStatus::Restricted],
                 default => [LegalityStatus::Legal, LegalityStatus::Restricted],
             };
-            $sub = $this->cards->getEntityManager()->createQueryBuilder()
+            $sub = $this->em->createQueryBuilder()
                 ->select('1')
                 ->from(CardLegality::class, 'cl')
                 ->where('cl.oracleCard = o')

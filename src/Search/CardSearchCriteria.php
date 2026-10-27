@@ -49,7 +49,8 @@ final class CardSearchCriteria
     {
         preg_match_all('/"([^"]*)"|(\S+)/u', $input, $matches, \PREG_SET_ORDER);
 
-        $terms = array_map(static fn (array $m) => trim(isset($m[2]) && '' !== $m[2] ? $m[2] : $m[1]), $matches);
+        // Groupe 2 : mot isolé ; groupe 1 : expression entre guillemets (le groupe 2 est alors absent)
+        $terms = array_map(static fn (array $m) => trim($m[2] ?? $m[1]), $matches);
 
         return array_values(array_filter($terms, static fn (string $t) => '' !== $t));
     }

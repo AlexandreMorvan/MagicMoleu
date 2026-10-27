@@ -40,6 +40,9 @@ class CardSearchTest extends KernelTestCase
         self::assertSame(\count($expected), $result->total);
     }
 
+    /**
+     * @return iterable<string, array{CardSearchCriteria, list<string>}>
+     */
     public static function criteriaProvider(): iterable
     {
         $red = ['Bonecrusher Giant // Stomp', 'Lightning Bolt', 'Shatterskull Smashing // Shatterskull, the Hammer Pass'];

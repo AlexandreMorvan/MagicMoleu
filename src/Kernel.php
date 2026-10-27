@@ -12,6 +12,8 @@ class Kernel extends BaseKernel
     /**
      * Ajoute `app.build_version`, différent à chaque compilation du conteneur (donc à chaque déploiement,
      * et en dev à chaque modification du code) : il sert à invalider les caches navigateur longs.
+     *
+     * @return array<string, mixed>
      */
     protected function getKernelParameters(): array
     {

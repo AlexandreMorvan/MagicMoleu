@@ -117,3 +117,13 @@ bin/console doctrine:database:create --env=test
 bin/console doctrine:migrations:migrate --env=test
 php bin/phpunit
 ```
+
+### Analyse statique
+
+PHPStan (niveau 6) avec les extensions Symfony, Doctrine et PHPUnit, configuré dans `phpstan.dist.neon` :
+
+```bash
+composer phpstan
+```
+
+Il s'appuie sur le conteneur compilé en dev (`var/cache/dev/`) : lancer `bin/console cache:clear` s'il manque.

@@ -138,18 +138,27 @@ class CardSearch
         return $this->criteria() != new CardSearchCriteria(sort: $this->sort, direction: $this->dir);
     }
 
+    /**
+     * @return list<Color|'C'> couleurs, puis « C » pour incolore
+     */
     #[ExposeInTemplate]
     public function getColorChoices(): array
     {
         return [...Color::cases(), 'C'];
     }
 
+    /**
+     * @return list<Rarity>
+     */
     #[ExposeInTemplate]
     public function getRarityChoices(): array
     {
         return [Rarity::Common, Rarity::Uncommon, Rarity::Rare, Rarity::Mythic];
     }
 
+    /**
+     * @return list<Format>
+     */
     #[ExposeInTemplate]
     public function getFormatChoices(): array
     {

@@ -223,7 +223,7 @@ class CollectionBrowser extends AbstractController
      */
     public function getRarityChoices(): array
     {
-        return array_values(array_filter(Rarity::cases(), static fn (Rarity $r) => !\in_array($r, [Rarity::Bonus], true)));
+        return [Rarity::Common, Rarity::Uncommon, Rarity::Rare, Rarity::Mythic, Rarity::Special];
     }
 
     /**
