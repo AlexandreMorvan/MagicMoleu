@@ -5,6 +5,7 @@ namespace App\Form;
 use App\Entity\CardCollection;
 use App\Entity\User;
 use Doctrine\ORM\EntityRepository;
+use SortDirection;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
@@ -34,7 +35,7 @@ class CollectionImportType extends AbstractType
                 'placeholder' => '+ Nouvelle collection',
                 'choice_label' => 'name',
                 'query_builder' => static fn (EntityRepository $r) => $r->createQueryBuilder('c')
-                    ->where('c.owner = :owner')->setParameter('owner', $owner)->orderBy('c.name', 'ASC'),
+                    ->where('c.owner = :owner')->setParameter('owner', $owner)->orderBy('c.name', SortDirection::Ascending),
             ])
             ->add('name', TextType::class, [
                 'label' => 'Nom de la nouvelle collection',

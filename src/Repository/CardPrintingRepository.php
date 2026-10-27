@@ -7,6 +7,7 @@ use App\Entity\MtgSet;
 use App\Entity\OracleCard;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\QueryBuilder;
+use SortDirection;
 use Symfony\Bridge\Doctrine\Types\UuidType;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -33,9 +34,9 @@ class CardPrintingRepository extends ServiceEntityRepository
             ->where('p.oracleCard = :card')
             // L'identifiant est un UUID binaire : son type doit être précisé explicitement
             ->setParameter('card', $card->getId(), UuidType::NAME)
-            ->orderBy('p.releasedAt', 'DESC')
-            ->addOrderBy('s.name', 'ASC')
-            ->addOrderBy('p.collectorNumber', 'ASC')
+            ->orderBy('p.releasedAt', SortDirection::Descending)
+            ->addOrderBy('s.name', SortDirection::Ascending)
+            ->addOrderBy('p.collectorNumber', SortDirection::Ascending)
             ->getQuery()
             ->getResult();
     }
@@ -55,7 +56,7 @@ class CardPrintingRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('p')
             ->where('p.oracleCard = :card')
             ->setParameter('card', $card->getId(), UuidType::NAME)
-            ->orderBy('p.releasedAt', 'DESC')
+            ->orderBy('p.releasedAt', SortDirection::Descending)
             ->setMaxResults(1)
             ->getQuery()
             ->getOneOrNullResult();
@@ -105,9 +106,9 @@ class CardPrintingRepository extends ServiceEntityRepository
 
         // Numéros de collection alphanumériques (« 12 », « 12a », « 250★ ») : longueur puis valeur
         match ($sort) {
-            'name' => $qb->orderBy('o.name', 'ASC'),
-            'rarity' => $qb->addSelect(self::RARITY_ORDER.' AS HIDDEN rarityOrder')->orderBy('rarityOrder', 'DESC')->addOrderBy('o.name', 'ASC'),
-            default => $qb->orderBy('LENGTH(p.collectorNumber)', 'ASC')->addOrderBy('p.collectorNumber', 'ASC'),
+            'name' => $qb->orderBy('o.name', SortDirection::Ascending),
+            'rarity' => $qb->addSelect(self::RARITY_ORDER.' AS HIDDEN rarityOrder')->orderBy('rarityOrder', SortDirection::Descending)->addOrderBy('o.name', SortDirection::Ascending),
+            default => $qb->orderBy('LENGTH(p.collectorNumber)', SortDirection::Ascending)->addOrderBy('p.collectorNumber', SortDirection::Ascending),
         };
 
         return $qb->getQuery()->getResult();
@@ -150,9 +151,9 @@ class CardPrintingRepository extends ServiceEntityRepository
     {
         $qb = $this->createSpoilerQueryBuilder($since)
             ->addSelect('s', 'o')
-            ->orderBy('p.revealedAt', 'DESC')
-            ->addOrderBy('s.releasedAt', 'DESC')
-            ->addOrderBy('o.name', 'ASC')
+            ->orderBy('p.revealedAt', SortDirection::Descending)
+            ->addOrderBy('s.releasedAt', SortDirection::Descending)
+            ->addOrderBy('o.name', SortDirection::Ascending)
             ->setFirstResult($offset)
             ->setMaxResults($limit);
 
@@ -196,8 +197,8 @@ class CardPrintingRepository extends ServiceEntityRepository
         return $this->createSpoilerQueryBuilder($since)
             ->select('s.code', 's.name', 's.releasedAt', 's.iconSvgUri', 'COUNT(p.id) AS cards')
             ->groupBy('s.id')
-            ->orderBy('s.releasedAt', 'DESC')
-            ->addOrderBy('s.name', 'ASC')
+            ->orderBy('s.releasedAt', SortDirection::Descending)
+            ->addOrderBy('s.name', SortDirection::Ascending)
             ->getQuery()
             ->getArrayResult();
     }

@@ -6,6 +6,7 @@ use App\Entity\CardCollection;
 use App\Entity\CollectionCard;
 use App\Entity\OracleCard;
 use App\Entity\User;
+use SortDirection;
 use Symfony\Bridge\Doctrine\Types\UuidType;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -52,7 +53,7 @@ class CardCollectionRepository extends ServiceEntityRepository
             ->leftJoin('p.oracleCard', 'o')->addSelect('o')
             ->where('c.owner = :owner')
             ->setParameter('owner', $owner)
-            ->orderBy('c.updatedAt', 'DESC')
+            ->orderBy('c.updatedAt', SortDirection::Descending)
             ->getQuery()
             ->getResult();
     }
@@ -82,7 +83,7 @@ class CardCollectionRepository extends ServiceEntityRepository
             ->setParameter('owner', $owner)
             ->setParameter('card', $card->getId(), UuidType::NAME)
             ->groupBy('c.id')
-            ->orderBy('c.name', 'ASC')
+            ->orderBy('c.name', SortDirection::Ascending)
             ->getQuery()
             ->getArrayResult();
     }

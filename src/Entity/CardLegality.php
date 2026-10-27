@@ -13,7 +13,7 @@ class CardLegality
     public function __construct(
         #[ORM\Id]
         #[ORM\ManyToOne(inversedBy: 'legalities')]
-        #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
+        #[ORM\JoinColumn(onDelete: 'CASCADE')]
         private OracleCard $oracleCard,
 
         #[ORM\Id]

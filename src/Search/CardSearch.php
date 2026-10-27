@@ -11,6 +11,7 @@ use App\Enum\Rarity;
 use App\Repository\OracleCardRepository;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator;
+use SortDirection;
 
 /**
  * Recherche multicritère sur les cartes oracle.
@@ -162,17 +163,17 @@ class CardSearch
 
     private function applySort(QueryBuilder $qb, CardSearchCriteria $c): void
     {
-        $dir = 'desc' === $c->direction ? 'DESC' : 'ASC';
+        $dir = 'desc' === $c->direction ? SortDirection::Descending : SortDirection::Ascending;
         match ($c->sort) {
             'cmc' => $qb->orderBy('o.cmc', $dir),
             'edhrec' => $qb
                 ->addSelect('CASE WHEN o.edhrecRank IS NULL THEN 1 ELSE 0 END AS HIDDEN noRank')
-                ->orderBy('noRank', 'ASC')
+                ->orderBy('noRank', SortDirection::Ascending)
                 ->addOrderBy('o.edhrecRank', $dir),
-            'recent' => $qb->orderBy('o.firstPrintedAt', 'ASC' === $dir ? 'DESC' : 'ASC'),
+            'recent' => $qb->orderBy('o.firstPrintedAt', SortDirection::Ascending === $dir ? SortDirection::Descending : SortDirection::Ascending),
             default => $qb->orderBy('o.name', $dir),
         };
-        $qb->addOrderBy('o.name', 'ASC');
+        $qb->addOrderBy('o.name', SortDirection::Ascending);
     }
 
     private function param(QueryBuilder $qb, mixed $value): string
