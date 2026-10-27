@@ -45,23 +45,19 @@ class AccountTest extends WebTestCase
         self::assertResponseRedirects('/connexion');
     }
 
-    public function testChangeUsernameAndEmailRequiresCurrentPassword(): void
+    public function testChangeEmailRequiresCurrentPassword(): void
     {
         $this->client->loginUser($this->user);
         $this->client->request('GET', '/profil/parametres');
         $this->client->submitForm('Enregistrer', [
-            'account_identity[username]' => 'Chandra-Nalaar',
             'account_identity[email]' => 'nalaar@example.com',
             'account_identity[currentPassword]' => 'mauvais',
         ]);
         self::assertResponseStatusCodeSame(422);
         self::assertSelectorTextContains('#identite', 'Mot de passe incorrect.');
-        // Rien n'est enregistré et le menu garde l'ancien pseudo
-        self::assertSelectorTextContains('header', 'Chandra');
         self::assertNull(self::getContainer()->get(UserRepository::class)->findOneBy(['email' => 'nalaar@example.com']));
 
         $this->client->submitForm('Enregistrer', [
-            'account_identity[username]' => 'Chandra-Nalaar',
             'account_identity[email]' => 'nalaar@example.com',
             'account_identity[currentPassword]' => self::PASSWORD,
         ]);
@@ -70,22 +66,28 @@ class AccountTest extends WebTestCase
         // L'email (identifiant de connexion) a changé sans déconnecter l'utilisateur
         $this->client->followRedirect();
         self::assertResponseIsSuccessful();
-        self::assertSelectorTextContains('main', 'Pseudo et email mis à jour.');
+        self::assertSelectorTextContains('main', 'Email mis à jour.');
         self::assertSelectorTextContains('main', 'nalaar@example.com');
     }
 
-    public function testUsernameMustStayUnique(): void
+    public function testUsernameCannotBeChanged(): void
     {
-        $this->createUser('Gideon');
         $this->client->loginUser($this->user);
-        $this->client->request('GET', '/profil/parametres');
-        $this->client->submitForm('Enregistrer', [
-            'account_identity[username]' => 'Gideon',
-            'account_identity[currentPassword]' => self::PASSWORD,
-        ]);
+        $crawler = $this->client->request('GET', '/profil/parametres');
+        self::assertSelectorExists('#account_identity_username[disabled]');
 
-        self::assertResponseStatusCodeSame(422);
-        self::assertSelectorTextContains('#identite', 'Ce pseudo est déjà pris.');
+        // Même en forgeant la requête, le pseudo envoyé est ignoré
+        $this->client->request('POST', '/profil/parametres', ['account_identity' => [
+            'username' => 'Gideon',
+            'email' => 'chandra@example.com',
+            'currentPassword' => self::PASSWORD,
+            '_token' => $crawler->filter('#account_identity__token')->attr('value'),
+        ]]);
+        self::assertResponseRedirects('/profil/parametres#identite');
+
+        $users = self::getContainer()->get(UserRepository::class);
+        self::assertNull($users->findOneBy(['username' => 'Gideon']));
+        self::assertNotNull($users->findOneBy(['username' => 'Chandra']));
     }
 
     public function testChangePassword(): void

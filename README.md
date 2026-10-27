@@ -93,7 +93,7 @@ Les decks s'affichent en liste, en vignettes ou en tableau détaillé, groupés 
 
 ## Compte utilisateur
 
-- **Mon compte** (`/profil/parametres`) : pseudo et email (confirmés par le mot de passe), avatar parmi les planeswalkers
+- **Mon compte** (`/profil/parametres`) : email (confirmé par le mot de passe ; le pseudo est définitif pour éviter les usurpations), avatar parmi les planeswalkers
   (illustrations Scryfall déjà en base), présentation, couleurs favorites (nom de guilde / clan affiché), format préféré
   (proposé à la création d'un deck), mot de passe, préférences (toasts de notification, vue par défaut des decks et
   des collections), export JSON de toutes les données, suppression du compte (confirmation SweetAlert + mot de passe).

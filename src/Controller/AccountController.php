@@ -43,7 +43,7 @@ class AccountController extends AbstractController
     {
         $identity = $this->createForm(AccountIdentityType::class, $user)->handleRequest($request);
         if ($identity->isSubmitted() && $identity->isValid()) {
-            return $this->saveAndReauthenticate($user, 'Pseudo et email mis à jour.', 'identite');
+            return $this->saveAndReauthenticate($user, 'Email mis à jour.', 'identite');
         }
 
         $profile = $this->createForm(AccountProfileType::class, $user)->handleRequest($request);
