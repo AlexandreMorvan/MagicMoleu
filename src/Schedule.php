@@ -13,7 +13,7 @@ use Symfony\Contracts\Cache\CacheInterface;
  * Tâches planifiées, exécutées par le worker : `bin/console messenger:consume scheduler_default`.
  *
  * Les heures sont en UTC : Scryfall publie ses fichiers bulk vers 9 h UTC.
- * Les trois commandes partagent un verrou, elles sont donc décalées pour ne pas se chevaucher.
+ * Les commandes d'import partagent un verrou, elles sont donc décalées pour ne pas se chevaucher.
  */
 #[AsSchedule]
 class Schedule implements ScheduleProviderInterface
@@ -35,6 +35,8 @@ class Schedule implements ScheduleProviderInterface
             ->add(RecurringMessage::cron('5 * * * *', new RunCommandMessage('app:scryfall:sync-spoilers'), $utc))
             // Base complète des cartes, une fois par jour après la publication du bulk
             ->add(RecurringMessage::cron('15 10 * * *', new RunCommandMessage('app:scryfall:import-cards'), $utc))
+            // Decks préconstruits, après l'import des cartes qu'ils référencent
+            ->add(RecurringMessage::cron('45 10 * * *', new RunCommandMessage('app:mtgjson:import-precons'), $utc))
             // Traductions françaises (fichier de ~2 Go), une fois par semaine
             ->add(RecurringMessage::cron('30 11 * * 1', new RunCommandMessage('app:scryfall:import-localized --lang=fr'), $utc))
         ;

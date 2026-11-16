@@ -14,6 +14,11 @@ framework:
                 # Scryfall exige un User-Agent identifiant l'application
                 'User-Agent': 'MagicSite/0.1'
         scoped_clients:
+            mtgjson.client:
+                base_uri: 'https://mtgjson.com/api/v5/'
+                timeout: 30
+                headers:
+                    'Accept': 'application/json'
             scryfall.client:
                 base_uri: 'https://api.scryfall.com'
                 headers:

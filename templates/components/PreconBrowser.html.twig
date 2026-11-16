@@ -1,0 +1,46 @@
+<div {{ attributes }}>
+    <div class="flex flex-wrap items-center gap-3">
+        <label for="precon-q" class="sr-only">Rechercher un deck</label>
+        <input id="precon-q" type="search" class="input max-w-md" data-model="debounce(300)|q" placeholder="Deck, commandant ou édition…" autocomplete="off">
+        <span data-loading class="h-4 w-4 animate-spin rounded-full border-2 border-neon-violet border-t-transparent" hidden></span>
+    </div>
+
+    {% set decks = this.decks %}
+    <div data-loading="addClass(opacity-50)" class="mt-6 transition-opacity">
+        {% if decks is empty %}
+            <p class="panel p-10 text-center text-ink-300">
+                {{ q ? 'Aucun deck préconstruit ne correspond à « ' ~ q ~ ' ».' : 'Le catalogue des decks préconstruits est vide pour l\'instant.' }}
+            </p>
+        {% else %}
+            <ul class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {% for precon in decks %}
+                    <li>
+                        <a href="{{ path('app_precon_show', {id: precon.id}) }}" class="panel group block h-full overflow-hidden transition hover:border-neon-violet/60 hover:shadow-glow">
+                            <div class="relative h-36 bg-ink-800">
+                                {% if precon.coverUri %}
+                                    <img src="{{ precon.coverUri }}" alt="" loading="lazy" class="h-full w-full object-cover opacity-80 transition group-hover:opacity-100">
+                                {% endif %}
+                                <div class="absolute inset-0 bg-gradient-to-t from-ink-850 to-transparent"></div>
+                                <span class="badge absolute left-3 top-3 border-white/20 bg-ink-950/60 text-white">{{ precon.releasedAt|format_date('medium', locale: 'fr') }}</span>
+                            </div>
+                            <div class="p-4">
+                                <p class="font-display text-lg font-bold leading-tight text-white group-hover:text-neon-cyan">{{ precon.name }}</p>
+                                {% if precon.commanderNames %}<p class="mt-1 truncate text-sm text-ink-300">{{ precon.commanderNames }}</p>{% endif %}
+                                <p class="mt-2 flex items-center gap-1.5 text-xs text-ink-500">
+                                    {% if precon.set and precon.set.iconSvgUri %}<img src="{{ precon.set.iconSvgUri }}" alt="" class="h-3.5 w-3.5 invert" loading="lazy">{% endif %}
+                                    <span class="truncate">{{ precon.set ? precon.set.name : precon.setCode|upper }}</span>
+                                </p>
+                            </div>
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+
+            {% if this.hasMore %}
+                <div class="mt-8 text-center">
+                    <button type="button" class="btn btn-ghost" data-action="live#action" data-live-action-param="more">Voir plus</button>
+                </div>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>

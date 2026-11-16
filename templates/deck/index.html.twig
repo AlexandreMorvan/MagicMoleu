@@ -5,9 +5,12 @@
 {% block body %}
     <div class="flex flex-wrap items-center justify-between gap-4">
         <h1 class="text-3xl uppercase">Decks</h1>
-        {% if app.user %}
-            <a href="{{ path('app_deck_new') }}" class="btn btn-primary">+ Nouveau deck</a>
-        {% endif %}
+        <div class="flex flex-wrap gap-3">
+            <a href="{{ path('app_precon_index') }}" class="btn btn-ghost">Decks préconstruits</a>
+            {% if app.user %}
+                <a href="{{ path('app_deck_new') }}" class="btn btn-primary">+ Nouveau deck</a>
+            {% endif %}
+        </div>
     </div>
 
     {% if app.user %}

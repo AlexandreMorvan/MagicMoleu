@@ -12,6 +12,11 @@
             <p class="mt-1 flex flex-wrap items-center gap-1.5 text-sm text-ink-300">par
                 <a href="{{ path('app_player', {username: deck.owner.username}) }}" class="inline-flex items-center gap-1.5 font-semibold text-ink-100 hover:text-neon-cyan">
                     <twig:Avatar :user="deck.owner" size="h-5 w-5 text-[0.6rem]" />{{ deck.owner.username }}</a> · modifié le {{ deck.updatedAt|format_datetime('medium', 'short', locale: 'fr') }}</p>
+            {% if deck.basedOn %}
+                <p class="mt-1 text-sm text-ink-300">Basé sur le préconstruit
+                    <a href="{{ path('app_precon_show', {id: deck.basedOn.id}) }}" class="font-semibold text-ink-100 hover:text-neon-cyan">{{ deck.basedOn.name }}</a>
+                    ({{ deck.basedOn.releasedAt|date('Y') }})</p>
+            {% endif %}
             {% if deck.description %}<p class="mt-3 max-w-2xl text-ink-100">{{ deck.description|nl2br }}</p>{% endif %}
         </div>
         <div class="flex flex-wrap gap-2">{{ actions|default('')|raw }}</div>
