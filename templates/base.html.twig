@@ -27,12 +27,12 @@
             {route: 'app_collection_index', label: 'Collection', active: ['app_collection_index', 'app_collection_show', 'app_collection_new', 'app_collection_settings']},
         ] : []) %}
         <header class="sticky top-0 z-40 border-b border-ink-800 bg-ink-950/80 backdrop-blur-md">
-            <nav class="mx-auto flex h-16 max-w-7xl items-center gap-6 px-4 sm:px-6">
+            <nav class="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 sm:gap-6 sm:px-6">
                 <a href="{{ path('app_home') }}" class="group flex items-center gap-2">
                     <span class="grid h-8 w-8 rotate-45 place-items-center rounded-md bg-gradient-to-br from-neon-violet to-neon-cyan transition group-hover:shadow-glow">
                         <span class="h-3 w-3 rounded-sm bg-ink-950"></span>
                     </span>
-                    <span class="font-display text-xl font-bold uppercase tracking-[0.2em] text-white">{{ site_name }}</span>
+                    <span class="font-display text-xl font-bold uppercase tracking-[0.12em] text-white sm:tracking-[0.2em]">{{ site_name }}</span>
                 </a>
 
                 <div class="hidden items-center gap-1 md:flex">
@@ -64,16 +64,32 @@
                             </div>
                         </details>
                     {% else %}
-                        <a href="{{ path('app_login') }}" class="nav-link {{ route == 'app_login' ? 'nav-link-active' }}">Connexion</a>
-                        <a href="{{ path('app_register') }}" class="btn btn-primary">Créer un compte</a>
+                        <a href="{{ path('app_login') }}" class="nav-link hidden sm:inline-block {{ route == 'app_login' ? 'nav-link-active' }}">Connexion</a>
+                        <a href="{{ path('app_register') }}" class="btn btn-primary hidden sm:inline-flex">Créer un compte</a>
                     {% endif %}
+                    {# Menu principal sur mobile : grille de liens sous l'en-tête #}
+                    <details class="md:hidden" data-controller="dropdown" data-action="click@window->dropdown#closeOutside keydown.esc@window->dropdown#close">
+                        <summary class="mobile-menu-button" aria-label="Menu">
+                            <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                                <path class="menu-icon-open" d="M4 7h16M4 12h16M4 17h16"/>
+                                <path class="menu-icon-close" d="M6 6l12 12M18 6L6 18"/>
+                            </svg>
+                        </summary>
+                        <div class="mobile-menu">
+                            {% for item in nav_items %}
+                                <a href="{{ path(item.route) }}" class="mobile-menu-link {{ route in item.active ? 'mobile-menu-link-active' }}" {{ route in item.active ? 'aria-current="page"' }}>{{ item.label }}</a>
+                            {% endfor %}
+                            {% if is_granted('ROLE_ADMIN') %}
+                                <a href="{{ path('admin') }}" class="mobile-menu-link" data-turbo="false">Admin</a>
+                            {% endif %}
+                            {% if not app.user %}
+                                <a href="{{ path('app_login') }}" class="mobile-menu-link {{ route == 'app_login' ? 'mobile-menu-link-active' }}">Connexion</a>
+                                <a href="{{ path('app_register') }}" class="mobile-menu-link mobile-menu-link-cta">Créer un compte</a>
+                            {% endif %}
+                        </div>
+                    </details>
                 </div>
             </nav>
-            <div class="flex gap-1 overflow-x-auto border-t border-ink-800 px-2 md:hidden">
-                {% for item in nav_items %}
-                    <a href="{{ path(item.route) }}" class="nav-link shrink-0 {{ route in item.active ? 'nav-link-active' }}">{{ item.label }}</a>
-                {% endfor %}
-            </div>
         </header>
 
         {# Pas de préchargement au survol dans le contenu : les grilles de cartes déclencheraient une requête par carte survolée.

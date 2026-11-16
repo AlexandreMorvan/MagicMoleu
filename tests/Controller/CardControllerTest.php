@@ -131,6 +131,16 @@ class CardControllerTest extends WebTestCase
         }
     }
 
+    public function testMobileMenuListsEveryPageWithoutHorizontalStrip(): void
+    {
+        $crawler = $this->client->request('GET', '/decks');
+        $links = $crawler->filter('header .mobile-menu a')->each(fn ($a) => $a->attr('href'));
+
+        self::assertSame(['/', '/cartes', '/editions', '/decks', '/spoilers', '/partie', '/connexion', '/inscription'], $links);
+        self::assertSelectorTextSame('header .mobile-menu a[aria-current="page"]', 'Decks');
+        self::assertSelectorNotExists('header .overflow-x-auto');
+    }
+
     private function card(string $name): OracleCard
     {
         return self::getContainer()->get(OracleCardRepository::class)->findOneBy(['name' => $name]);
