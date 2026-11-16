@@ -5,9 +5,9 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>{% block title %}{% endblock %}{{ block('title')|trim ? ' · ' }}{{ site_name }}</title>
         <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><path d=%22M16 2 29 16 16 30 3 16Z%22 fill=%22%238b5cf6%22/><path d=%22M16 8 23 16 16 24 9 16Z%22 fill=%22%2322d3ee%22/></svg>">
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+        {# Polices hébergées localement (assets/fonts) ; les deux plus utilisées sont préchargées #}
+        <link rel="preload" href="{{ asset('fonts/inter-latin-wght-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
+        <link rel="preload" href="{{ asset('fonts/rajdhani-latin-700-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
         {% block stylesheets %}{% endblock %}
 
         {% block javascripts %}
