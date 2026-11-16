@@ -128,6 +128,7 @@
         </ul>
 
         <div class="mt-6 flex flex-wrap gap-3">
+            <a href="{{ path('app_card_combos', {id: card.id}) }}" data-turbo-frame="_top" class="btn btn-ghost">Voir les combos</a>
             {% if in_modal %}
                 <a href="{{ path('app_card_show', {id: card.id}) }}" data-turbo-frame="_top" class="btn btn-ghost">Ouvrir la fiche</a>
             {% endif %}

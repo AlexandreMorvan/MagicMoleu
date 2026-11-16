@@ -18,6 +18,11 @@ framework:
                 base_uri: 'https://api.scryfall.com'
                 headers:
                     'Accept': 'application/json'
+            commander_spellbook.client:
+                base_uri: 'https://backend.commanderspellbook.com'
+                timeout: 10
+                headers:
+                    'Accept': 'application/json'
 
 when@test:
     framework:

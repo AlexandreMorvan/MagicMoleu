@@ -2,12 +2,15 @@
 
 namespace App\Controller;
 
+use App\Combo\CommanderSpellbook;
+use App\Combo\ComboSourceUnavailableException;
 use App\Entity\CardLegality;
 use App\Entity\CardPrinting;
 use App\Entity\OracleCard;
 use App\Enum\Format;
 use App\Repository\CardPrintingRepository;
 use App\Repository\MtgSetRepository;
+use App\Repository\OracleCardRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -83,5 +86,40 @@ class CardController extends AbstractController
         }
 
         return $response;
+    }
+
+    /**
+     * Combos connus utilisant la carte (source : Commander Spellbook).
+     */
+    #[Route('/cartes/{id}/combos', name: 'app_card_combos', requirements: ['id' => Requirement::UUID], methods: ['GET'])]
+    public function combos(OracleCard $card, CommanderSpellbook $spellbook, OracleCardRepository $oracleCards): Response
+    {
+        try {
+            $combos = $spellbook->findCombos($card);
+        } catch (ComboSourceUnavailableException) {
+            $combos = null;
+        }
+
+        // Les cartes des combos présentes en base ouvrent leur fiche dans la modale et affichent leur nom français
+        $localCards = [];
+        if ($combos) {
+            $ids = [];
+            foreach ($combos->combos as $combo) {
+                foreach ($combo->cards as $comboCard) {
+                    if ($comboCard->oracleId) {
+                        $ids[$comboCard->oracleId->toRfc4122()] = $comboCard->oracleId;
+                    }
+                }
+            }
+            foreach ($ids ? $oracleCards->findBy(['id' => array_values($ids)]) : [] as $localCard) {
+                $localCards[$localCard->getId()->toRfc4122()] = $localCard;
+            }
+        }
+
+        return $this->render('card/combos.html.twig', [
+            'card' => $card,
+            'combos' => $combos,
+            'local_cards' => $localCards,
+        ], new Response(status: null === $combos ? Response::HTTP_SERVICE_UNAVAILABLE : Response::HTTP_OK));
     }
 }
