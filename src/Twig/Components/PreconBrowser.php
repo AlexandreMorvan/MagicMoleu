@@ -17,10 +17,14 @@ class PreconBrowser
 {
     use DefaultActionTrait;
 
-    public const int PER_PAGE = 24;
+    public const int PER_PAGE = 30;
 
     #[LiveProp(writable: true, url: true, onUpdated: 'resetPage')]
     public string $q = '';
+
+    /** Année de sortie ; null = toutes */
+    #[LiveProp(writable: true, url: true, onUpdated: 'resetPage')]
+    public ?int $year = null;
 
     #[LiveProp]
     public int $page = 1;
@@ -48,9 +52,32 @@ class PreconBrowser
      */
     public function getDecks(): array
     {
-        $this->decks ??= $this->repository->search($this->q, $this->page * self::PER_PAGE + 1);
+        $this->decks ??= $this->repository->search($this->q, $this->page * self::PER_PAGE + 1, year: $this->year);
 
         return \array_slice($this->decks, 0, $this->page * self::PER_PAGE);
+    }
+
+    /**
+     * Decks chargés regroupés par année de sortie, de la plus récente à la plus ancienne.
+     *
+     * @return array<int, list<PreconDeck>>
+     */
+    public function getDecksByYear(): array
+    {
+        $groups = [];
+        foreach ($this->getDecks() as $deck) {
+            $groups[(int) $deck->getReleasedAt()->format('Y')][] = $deck;
+        }
+
+        return $groups;
+    }
+
+    /**
+     * @return list<int>
+     */
+    public function getYears(): array
+    {
+        return $this->repository->findYears();
     }
 
     public function hasMore(): bool
