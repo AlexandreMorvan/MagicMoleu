@@ -4,7 +4,12 @@
 
 {% block body %}
     <div class="mx-auto max-w-2xl">
-        <h1 class="text-3xl uppercase">{{ deck ? 'Paramètres du deck' : 'Nouveau deck' }}</h1>
+        <div class="flex flex-wrap items-center justify-between gap-4">
+            <h1 class="text-3xl uppercase">{{ deck ? 'Paramètres du deck' : 'Nouveau deck' }}</h1>
+            {% if not deck %}
+                <a href="{{ path('app_precon_index') }}" class="btn btn-ghost">Ajouter un deck préconstruit</a>
+            {% endif %}
+        </div>
 
         {{ form_start(form, {attr: {class: 'panel mt-8 p-6 sm:p-8', novalidate: 'novalidate'}}) }}
             {{ form_row(form.name) }}

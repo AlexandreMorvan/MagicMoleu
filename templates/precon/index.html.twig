@@ -1,0 +1,17 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Decks préconstruits{% endblock %}
+
+{% block body %}
+    <div class="flex flex-wrap items-center justify-between gap-4">
+        <div>
+            <h1 class="text-3xl uppercase">Decks préconstruits</h1>
+            <p class="mt-1 text-ink-300">Les decks Commander du commerce, du plus récent au plus ancien. Ajoute-en un à tes decks pour le modifier.</p>
+        </div>
+        <a href="{{ path('app_deck_index') }}" class="btn btn-ghost">← Decks</a>
+    </div>
+
+    <div class="mt-8">
+        <twig:PreconBrowser />
+    </div>
+{% endblock %}

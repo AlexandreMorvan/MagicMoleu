@@ -46,6 +46,11 @@ class Deck
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     private \DateTimeImmutable $updatedAt;
 
+    /** Deck préconstruit dont ce deck est une copie */
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    private ?PreconDeck $basedOn = null;
+
     /** @var Collection<int, DeckCard> */
     #[ORM\OneToMany(targetEntity: DeckCard::class, mappedBy: 'deck', cascade: ['persist'], orphanRemoval: true)]
     private Collection $cards;
@@ -117,6 +122,18 @@ class Deck
     public function setPublic(bool $public): static
     {
         $this->public = $public;
+
+        return $this;
+    }
+
+    public function getBasedOn(): ?PreconDeck
+    {
+        return $this->basedOn;
+    }
+
+    public function setBasedOn(?PreconDeck $basedOn): static
+    {
+        $this->basedOn = $basedOn;
 
         return $this;
     }
