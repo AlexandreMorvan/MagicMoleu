@@ -14,9 +14,12 @@ use App\Repository\OracleCardRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\DependencyInjection\Attribute\Target;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\EventListener\AbstractSessionListener;
+use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Requirement\Requirement;
 
@@ -92,8 +95,19 @@ class CardController extends AbstractController
      * Combos connus utilisant la carte (source : Commander Spellbook).
      */
     #[Route('/cartes/{id}/combos', name: 'app_card_combos', requirements: ['id' => Requirement::UUID], methods: ['GET'])]
-    public function combos(OracleCard $card, CommanderSpellbook $spellbook, OracleCardRepository $oracleCards): Response
-    {
+    public function combos(
+        OracleCard $card,
+        Request $request,
+        CommanderSpellbook $spellbook,
+        OracleCardRepository $oracleCards,
+        #[Target('combos')]
+        RateLimiterFactoryInterface $combosLimiter,
+    ): Response {
+        $limit = $combosLimiter->create($request->getClientIp())->consume();
+        if (!$limit->isAccepted()) {
+            throw new TooManyRequestsHttpException($limit->getRetryAfter()->getTimestamp() - time());
+        }
+
         try {
             $combos = $spellbook->findCombos($card);
         } catch (ComboSourceUnavailableException) {

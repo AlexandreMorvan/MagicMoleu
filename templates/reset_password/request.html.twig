@@ -8,6 +8,7 @@
         <p class="mt-1 text-ink-300">Indique l'email de ton compte : nous t'enverrons un lien pour choisir un nouveau mot de passe.</p>
 
         {{ form_start(form, {attr: {class: 'panel mt-8 p-6 sm:p-8', novalidate: 'novalidate'}}) }}
+            {{ form_errors(form) }}
             {{ form_row(form.email) }}
             <button type="submit" class="btn btn-primary w-full">Envoyer le lien</button>
         {{ form_end(form) }}

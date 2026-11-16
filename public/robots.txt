@@ -1,0 +1,9 @@
+# Pages privées ou coûteuses : inutiles aux moteurs de recherche
+User-agent: *
+Disallow: /admin
+Disallow: /profil
+Disallow: /collections
+Disallow: /notifications
+Disallow: /mot-de-passe-oublie
+Disallow: /cartes/*/combos
+Disallow: /_components/
