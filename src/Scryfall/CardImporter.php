@@ -94,6 +94,7 @@ class CardImporter
             $this->upserter->upsert('mtg_set', array_values($this->buffer['mtg_set']), ['id'], ['id' => '`id`']);
             $this->upserter->upsert('oracle_card', $this->buffer['oracle_card'], ['id', 'default_printing_id'], self::ORACLE_UPDATES);
             $this->upserter->upsert('card_face', $this->buffer['card_face'], ['oracle_card_id']);
+            $this->releaseCollectorNumbers($this->buffer['card_printing']);
             $this->upserter->upsert('card_printing', $this->buffer['card_printing'], ['id', 'oracle_card_id', 'set_id'], updateOverrides: [
                 'revealed_at' => 'COALESCE(VALUES(`previewed_at`), `revealed_at`)',
             ]);
@@ -101,6 +102,43 @@ class CardImporter
         });
 
         $this->resetBuffer();
+    }
+
+    /**
+     * Scryfall renumérote parfois une édition (ex. un numéro 37 qui passe au 36 et le 38 au 37).
+     * Avant d'écrire un lot, les impressions qui occupent un (édition, numéro, langue) visé par une autre
+     * impression du lot reçoivent un numéro provisoire unique, « ~ » suivi du début de leur identifiant :
+     * sans cela, l'upsert violerait l'unicité, ou remplacerait l'identifiant de l'ancienne impression.
+     * Si elles figurent encore dans l'import, leur propre ligne leur rend ensuite leur vrai numéro.
+     *
+     * @param list<array<string, scalar|null>> $printings
+     */
+    private function releaseCollectorNumbers(array $printings): void
+    {
+        if (!$printings) {
+            return;
+        }
+
+        $keys = [];
+        $keysWithId = [];
+        $keyParams = [];
+        $keyWithIdParams = [];
+        foreach ($printings as $printing) {
+            $key = [BulkUpserter::uuidToHex($printing['set_id']), $printing['collector_number'], $printing['lang']];
+            $keys[] = '(UNHEX(?), ?, ?)';
+            $keysWithId[] = '(UNHEX(?), ?, ?, UNHEX(?))';
+            array_push($keyParams, ...$key);
+            array_push($keyWithIdParams, ...$key);
+            $keyWithIdParams[] = BulkUpserter::uuidToHex($printing['id']);
+        }
+
+        $this->connection->executeStatement(\sprintf(
+            "UPDATE `card_printing` SET `collector_number` = CONCAT('~', LEFT(LOWER(HEX(`id`)), 19))
+             WHERE (`set_id`, `collector_number`, `lang`) IN (%s)
+               AND (`set_id`, `collector_number`, `lang`, `id`) NOT IN (%s)",
+            implode(', ', $keys),
+            implode(', ', $keysWithId),
+        ), [...$keyParams, ...$keyWithIdParams]);
     }
 
     private function resetBuffer(): void

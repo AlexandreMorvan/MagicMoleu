@@ -100,6 +100,69 @@ class CardImporterTest extends KernelTestCase
         self::assertSame(10, $this->countRows(CardFace::class));
     }
 
+    /**
+     * Scryfall renumérote parfois une édition : deux impressions peuvent échanger leurs numéros
+     * d'un import à l'autre, ce qui violait temporairement l'unicité (édition, numéro, langue).
+     */
+    public function testReimportHandlesSwappedCollectorNumbers(): void
+    {
+        [$bolt, $copy] = $this->boltAndCopyInSameSet('999');
+        $importer = self::getContainer()->get(CardImporter::class);
+        $importer->import([$copy]);
+
+        [$bolt['collector_number'], $copy['collector_number']] = [$copy['collector_number'], $bolt['collector_number']];
+        $importer->import([$bolt, $copy]);
+
+        self::assertSame('999', $this->printing($bolt['id'])->getCollectorNumber());
+        self::assertSame($copy['collector_number'], $this->printing($copy['id'])->getCollectorNumber());
+    }
+
+    /**
+     * Une nouvelle impression prend le numéro d'une impression que l'import ne contient plus :
+     * l'ancienne est conservée (elle peut être en collection) sous un numéro provisoire.
+     */
+    public function testNewPrintingTakesTheNumberOfAPrintingAbsentFromTheImport(): void
+    {
+        [$bolt, $copy] = $this->boltAndCopyInSameSet($this->firstBolt()['collector_number']);
+
+        self::getContainer()->get(CardImporter::class)->import([$copy]);
+
+        self::assertSame($bolt['collector_number'], $this->printing($copy['id'])->getCollectorNumber());
+        self::assertStringStartsWith('~', $this->printing($bolt['id'])->getCollectorNumber());
+    }
+
+    /**
+     * @return array{array<string, mixed>, array<string, mixed>} Lightning Bolt et une autre impression de la même édition
+     */
+    private function boltAndCopyInSameSet(string $copyNumber): array
+    {
+        $bolt = $this->firstBolt();
+        $copy = ['id' => '0f0f0f0f-0000-4000-8000-000000000001', 'collector_number' => $copyNumber] + $bolt;
+
+        return [$bolt, $copy];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function firstBolt(): array
+    {
+        foreach (JsonlReader::read(self::FIXTURE) as $card) {
+            if ('Lightning Bolt' === $card['name']) {
+                return $card;
+            }
+        }
+
+        throw new \LogicException('Lightning Bolt absent de la fixture');
+    }
+
+    private function printing(string $id): CardPrinting
+    {
+        $this->em->clear();
+
+        return $this->em->find(CardPrinting::class, $id);
+    }
+
     private function oracle(string $name): OracleCard
     {
         $this->em->clear();
