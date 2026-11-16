@@ -45,7 +45,7 @@ class PreconDeckControllerTest extends WebTestCase
 
         self::assertResponseIsSuccessful();
         self::assertSame(['Party Time', 'Breed Lethality'], $crawler->filter('ul a p.font-display')->each(fn ($p) => $p->text()));
-        self::assertSelectorTextContains('ul', 'Thrasios, Triton Hero & Tymna the Weaver');
+        self::assertSelectorTextContains('main', 'Thrasios, Triton Hero & Tymna the Weaver');
     }
 
     public function testSearchByDeckCommanderOrSet(): void
@@ -59,6 +59,30 @@ class PreconDeckControllerTest extends WebTestCase
         }
 
         self::assertStringContainsString('Aucun deck préconstruit', $component->set('q', 'zzz')->render()->toString());
+    }
+
+    public function testDecksAreGroupedByYear(): void
+    {
+        $crawler = $this->client->request('GET', '/decks/preconstruits');
+
+        self::assertSame(['2022 (1)', '2016 (1)'], $crawler->filter('section h2')->each(fn ($h) => $h->text()));
+        self::assertSame(['Toutes les années', '2022', '2016'], $crawler->filter('select[data-model="year"] option')->each(fn ($o) => $o->text()));
+    }
+
+    public function testFilterByYear(): void
+    {
+        $component = $this->createLiveComponent(PreconBrowser::class, client: $this->client);
+
+        $html = $component->set('year', 2016)->render()->toString();
+        self::assertStringContainsString('Breed Lethality', $html);
+        self::assertStringNotContainsString('Party Time', $html);
+
+        self::assertStringContainsString('Aucun deck préconstruit', $component->set('q', 'wilson')->render()->toString(), 'année et recherche se combinent');
+
+        // L'année est reflétée dans l'URL
+        $this->client->request('GET', '/decks/preconstruits?year=2022');
+        self::assertSelectorTextContains('section h2', '2022');
+        self::assertSelectorNotExists('a[href="/decks/preconstruits/'.$this->precon('BreedLethality_C16')->getId().'"]');
     }
 
     public function testShowListsTheCards(): void

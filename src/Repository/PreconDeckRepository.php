@@ -17,11 +17,11 @@ class PreconDeckRepository extends ServiceEntityRepository
     }
 
     /**
-     * Decks du plus récent au plus ancien, filtrés par nom du deck, de l'édition ou du commandant.
+     * Decks du plus récent au plus ancien, filtrés par nom du deck, de l'édition ou du commandant, et par année de sortie.
      *
      * @return list<PreconDeck>
      */
-    public function search(string $query, int $limit, int $offset = 0): array
+    public function search(string $query, int $limit, int $offset = 0, ?int $year = null): array
     {
         $qb = $this->createQueryBuilder('d')
             ->leftJoin('d.set', 's')->addSelect('s')
@@ -37,7 +37,27 @@ class PreconDeckRepository extends ServiceEntityRepository
                 ->setParameter('code', mb_strtolower($query));
         }
 
+        if (null !== $year) {
+            $qb->andWhere('d.releasedAt BETWEEN :from AND :to')
+                ->setParameter('from', new \DateTimeImmutable($year.'-01-01'))
+                ->setParameter('to', new \DateTimeImmutable($year.'-12-31'));
+        }
+
         return $qb->getQuery()->getResult();
+    }
+
+    /**
+     * Années de sortie des decks, de la plus récente à la plus ancienne.
+     *
+     * @return list<int>
+     */
+    public function findYears(): array
+    {
+        $dates = $this->createQueryBuilder('d')->select('DISTINCT d.releasedAt')->getQuery()->getSingleColumnResult();
+        $years = array_values(array_unique(array_map(static fn (string $date) => (int) substr($date, 0, 4), $dates)));
+        rsort($years);
+
+        return $years;
     }
 
     /**
