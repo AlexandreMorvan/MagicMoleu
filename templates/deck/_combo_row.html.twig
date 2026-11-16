@@ -1,0 +1,24 @@
+{# Un combo du deck sur une ligne, déroulable. Variables : combo, local_cards, missing (noms des cartes à ajouter) #}
+{% set missing = missing|default([]) %}
+<li id="combo-{{ combo.id }}">
+    <details class="group panel overflow-hidden">
+        <summary class="flex cursor-pointer list-none items-center gap-3 p-3 hover:bg-ink-800/50 [&::-webkit-details-marker]:hidden">
+            <span class="flex shrink-0 -space-x-3" aria-hidden="true">
+                {% for combo_card in combo.cards|slice(0, 4) %}
+                    <img src="{{ combo_card.imageUri }}" alt="" loading="lazy" class="h-12 w-[2.15rem] rounded-sm object-cover ring-1 ring-ink-950 {{ combo_card.name in missing ? 'opacity-60 outline-2 outline-dashed outline-amber-400' }}">
+                {% endfor %}
+            </span>
+            <span class="min-w-0 flex-1">
+                <span class="block truncate text-sm font-semibold text-white">{{ combo.cards|map(c => c.name)|join(' + ') }}</span>
+                <span class="block truncate text-xs text-ink-300">
+                    {% if missing is not empty %}<span class="font-semibold text-amber-300">Ajouter {{ missing|join(', ') }}</span> · {% endif %}{{ combo.results|join(' · ') }}
+                </span>
+            </span>
+            <span class="hidden shrink-0 text-right text-xs text-ink-500 sm:block">{{ combo.popularity|format_number(locale: 'fr') }} decks</span>
+            <span class="shrink-0 text-ink-500 transition group-open:rotate-180" aria-hidden="true">▾</span>
+        </summary>
+        <ul class="border-t border-ink-800 p-3">
+            {{ include('card/_combo.html.twig', {compact: false, missing: missing, embedded: true}) }}
+        </ul>
+    </details>
+</li>

@@ -1,0 +1,8 @@
+{
+    "private": true,
+    "type": "module",
+    "description": "Uniquement pour les tests JavaScript (node --test) : les assets sont servis par AssetMapper, sans build.",
+    "scripts": {
+        "test": "node --test tests/js/"
+    }
+}

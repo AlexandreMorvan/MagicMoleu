@@ -3,12 +3,18 @@
 namespace App\Controller;
 
 use App\Achievement\AchievementChecker;
+use App\Collection\OwnershipChecker;
+use App\Combo\ComboCardLinker;
+use App\Combo\ComboSourceUnavailableException;
+use App\Combo\CommanderSpellbook;
 use App\Deck\DeckExporter;
 use App\Deck\DeckImporter;
 use App\Entity\Deck;
+use App\Entity\DeckCard;
 use App\Entity\User;
 use App\Enum\DeckGrouping;
 use App\Enum\DeckView;
+use App\Enum\DeckZone;
 use App\Enum\Format;
 use App\Form\DeckType;
 use App\Repository\CardCollectionRepository;
@@ -16,10 +22,12 @@ use App\Repository\DeckRepository;
 use App\Security\DeckVoter;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\DependencyInjection\Attribute\Target;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Requirement\Requirement;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
@@ -73,6 +81,7 @@ class DeckController extends AbstractController
         int $id,
         #[CurrentUser] ?User $user,
         CardCollectionRepository $collections,
+        OwnershipChecker $ownership,
         #[MapQueryParameter] ?DeckView $vue = null,
         #[MapQueryParameter] DeckGrouping $groupe = DeckGrouping::Type,
     ): Response {
@@ -86,6 +95,68 @@ class DeckController extends AbstractController
             'grouping' => $groupe,
             // Pour « ajouter toutes les cartes à une collection »
             'collections' => $user ? $collections->findByOwner($user) : [],
+            // Ce que l'utilisateur possède déjà de ce deck (le sien ou celui d'un autre)
+            'ownership' => $user && $deck->getCards()->count() ? $ownership->forDeck($deck, $user) : null,
+        ]);
+    }
+
+    /**
+     * Main de départ d'un deck Commander : mélange, mulligan et pioche, côté navigateur (contrôleur Stimulus « goldfish »).
+     */
+    #[Route('/{id}/main-de-depart', name: 'app_deck_goldfish', requirements: ['id' => Requirement::DIGITS], methods: ['GET'])]
+    public function goldfish(int $id): Response
+    {
+        $deck = $this->findDeck($id);
+        $this->denyAccessUnlessGranted(DeckVoter::VIEW, $deck);
+        if (Format::Commander !== $deck->getFormat()) {
+            throw $this->createNotFoundException('La main de départ est réservée aux decks Commander.');
+        }
+
+        $card = static fn (DeckCard $line): array => [
+            'name' => $line->getOracleCard()->getName(),
+            'image' => $line->getImageUri(),
+            'land' => $line->getOracleCard()->isLand(),
+        ];
+        $library = [];
+        foreach ($deck->getCardsIn(DeckZone::Main) as $line) {
+            array_push($library, ...array_fill(0, $line->getQuantity(), $card($line)));
+        }
+
+        return $this->render('deck/goldfish.html.twig', [
+            'deck' => $deck,
+            'library' => $library,
+            'commanders' => array_map($card, $deck->getCardsIn(DeckZone::Commander)),
+        ]);
+    }
+
+    /**
+     * Combos du deck (Commander Spellbook), chargés en différé dans la fiche du deck (Turbo Frame).
+     */
+    #[Route('/{id}/combos', name: 'app_deck_combos', requirements: ['id' => Requirement::DIGITS], methods: ['GET'])]
+    public function combos(
+        int $id,
+        Request $request,
+        CommanderSpellbook $spellbook,
+        ComboCardLinker $linker,
+        #[Target('combos')]
+        RateLimiterFactoryInterface $combosLimiter,
+    ): Response {
+        $deck = $this->findDeck($id);
+        $this->denyAccessUnlessGranted(DeckVoter::VIEW, $deck);
+
+        $combos = null;
+        if ($combosLimiter->create($request->getClientIp())->consume()->isAccepted()) {
+            try {
+                $combos = $spellbook->findDeckCombos($deck);
+            } catch (ComboSourceUnavailableException) {
+            }
+        }
+
+        // Toujours 200 : la frame affiche le message d'indisponibilité au lieu d'une erreur
+        return $this->render('deck/_combos.html.twig', [
+            'deck' => $deck,
+            'combos' => $combos,
+            'local_cards' => $combos ? $linker->link($combos->all()) : [],
         ]);
     }
 

@@ -1,0 +1,32 @@
+{# Part d'une liste déjà possédée dans les collections de l'utilisateur. Variables : ownership #}
+<section class="panel mt-4 p-5" id="ma-collection">
+    <h2 class="font-sans text-xs font-semibold uppercase tracking-widest text-ink-500">Dans mes collections</h2>
+    <div class="mt-2 flex items-baseline justify-between gap-3">
+        <p class="font-display text-3xl font-bold {{ ownership.complete ? 'text-mana-g' : 'text-white' }}">{{ ownership.percent }} %</p>
+        <p class="text-sm text-ink-300">{{ ownership.owned }} / {{ ownership.total }} cartes</p>
+    </div>
+    <div class="mt-2 h-2 overflow-hidden rounded-full bg-ink-800" role="progressbar" aria-valuenow="{{ ownership.percent }}" aria-valuemin="0" aria-valuemax="100" aria-label="Cartes possédées">
+        <div class="h-full rounded-full bg-gradient-to-r from-neon-violet to-neon-cyan" style="width: {{ ownership.percent }}%"></div>
+    </div>
+
+    {% if ownership.complete %}
+        <p class="mt-3 text-sm text-mana-g">Tu as toutes les cartes.</p>
+    {% else %}
+        <p class="mt-3 text-sm text-ink-300">
+            Il te manque <span class="font-semibold text-white">{{ ownership.missingCount }} carte{{ ownership.missingCount > 1 ? 's' }}</span>{% if ownership.missingCost > 0 %},
+            environ <span class="font-semibold text-white">{{ ownership.missingCost|format_currency('EUR', {fraction_digit: 0}, locale: 'fr') }}</span>{% endif %}.
+        </p>
+        <details class="mt-3">
+            <summary class="cursor-pointer text-sm font-semibold text-neon-cyan hover:underline">Voir les cartes manquantes</summary>
+            <ul class="mt-2 max-h-80 divide-y divide-ink-800 overflow-y-auto text-sm">
+                {% for line in ownership.missing %}
+                    <li class="flex items-center gap-2 py-1.5">
+                        <a href="{{ path('app_card_show', {id: line.card.id}) }}" data-turbo-frame="card_modal" class="min-w-0 flex-1 truncate text-ink-100 hover:text-neon-cyan">{{ line.quantity > 1 ? line.quantity ~ ' × ' }}{{ line.card.name }}</a>
+                        <span class="shrink-0 text-xs text-ink-500">{{ line.unitPrice is not null ? (line.unitPrice * line.quantity)|format_currency('EUR', locale: 'fr') : '—' }}</span>
+                    </li>
+                {% endfor %}
+            </ul>
+        </details>
+    {% endif %}
+    <p class="mt-3 text-xs text-ink-500">Toutes éditions confondues, terrains de base non comptés.</p>
+</section>

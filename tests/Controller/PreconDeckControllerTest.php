@@ -2,6 +2,7 @@
 
 namespace App\Tests\Controller;
 
+use App\Entity\CardCollection;
 use App\Entity\PreconDeck;
 use App\Entity\User;
 use App\Enum\DeckZone;
@@ -97,6 +98,32 @@ class PreconDeckControllerTest extends WebTestCase
         self::assertSelectorTextContains('main', '×96');
         self::assertCount(4, $crawler->filter('main a[data-turbo-frame="card_modal"]'));
         self::assertSelectorTextContains('main header', 'Connecte-toi pour l\'ajouter');
+    }
+
+    public function testShowsTheShareOfThePreconAlreadyOwned(): void
+    {
+        $user = $this->createUser();
+        $collection = (new CardCollection($user))->setName('Classeur');
+        $collection->addCard(self::oracle('Wilson, Refined Grizzly')->getPrintings()->first());
+        $em = self::getContainer()->get(EntityManagerInterface::class);
+        $em->persist($collection);
+        $em->flush();
+        $this->client->loginUser($user);
+
+        $this->client->request('GET', '/decks/preconstruits/'.$this->precon('PartyTime_CLB')->getId());
+        // Wilson et Raised by Giants comptent, pas les forêts
+        self::assertSelectorTextContains('#ma-collection', '50 %');
+        self::assertSelectorTextContains('#ma-collection', 'Raised by Giants');
+
+        $html = $this->createLiveComponent(PreconBrowser::class, client: $this->client)->render()->toString();
+        self::assertStringContainsString('50 %', $html);
+    }
+
+    public function testAnonymousVisitorsSeeNoOwnership(): void
+    {
+        $this->client->request('GET', '/decks/preconstruits/'.$this->precon('PartyTime_CLB')->getId());
+
+        self::assertSelectorNotExists('#ma-collection');
     }
 
     public function testAddingAPreconRequiresLogin(): void

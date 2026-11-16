@@ -45,6 +45,10 @@
         </p>
     {% endif %}
 
+    {% if ownership %}
+        <div class="mb-8 max-w-md">{{ include('collection/_ownership.html.twig') }}</div>
+    {% endif %}
+
     {% for section in [{title: commanders|length > 1 ? 'Commandants' : 'Commandant', cards: commanders}, {title: 'Deck', cards: main}] %}
         {% if section.cards is not empty %}
             <section class="mb-10">

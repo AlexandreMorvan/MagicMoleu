@@ -4,6 +4,10 @@
 
 {% block body %}
     {% set actions %}
+        {% if deck.format.value == 'commander' and deck.cards is not empty %}
+            <a href="{{ path('app_deck_goldfish', {id: deck.id}) }}" class="btn btn-ghost">Main de départ</a>
+            <a href="{{ path('app_game', {deck: deck.id}) }}" class="btn btn-ghost">Lancer une partie</a>
+        {% endif %}
         <a href="{{ path('app_deck_export', {id: deck.id}) }}" class="btn btn-ghost" target="_blank" data-turbo="false">Exporter</a>
         {% if is_granted('DECK_EDIT', deck) %}
             <a href="{{ path('app_deck_edit', {id: deck.id}) }}" class="btn btn-primary">Modifier</a>
@@ -20,9 +24,19 @@
             {% if deck.cards is empty %}
                 <div class="panel border-dashed p-10 text-center text-ink-300">Ce deck est vide.</div>
             {% endif %}
+            {% if deck.cards is not empty %}
+                {# Chargé en différé : Commander Spellbook peut être lent ou indisponible #}
+                <turbo-frame id="deck-combos" src="{{ path('app_deck_combos', {id: deck.id}) }}" loading="lazy">
+                    <section class="panel p-5 text-sm text-ink-300">
+                        <span class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-neon-violet border-t-transparent align-middle"></span>
+                        Recherche des combos du deck…
+                    </section>
+                </turbo-frame>
+            {% endif %}
         </div>
         <aside>
             {{ include('deck/_sidebar.html.twig') }}
+            {% if ownership %}{{ include('collection/_ownership.html.twig') }}{% endif %}
             {{ include('deck/_add_to_collection.html.twig') }}
         </aside>
     </div>

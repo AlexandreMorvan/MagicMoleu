@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Achievement\AchievementChecker;
+use App\Collection\OwnershipChecker;
 use App\Entity\PreconDeck;
 use App\Entity\User;
 use App\Enum\DeckZone;
@@ -32,10 +33,11 @@ class PreconDeckController extends AbstractController
     }
 
     #[Route('/{id}', name: 'app_precon_show', requirements: ['id' => Requirement::DIGITS], methods: ['GET'])]
-    public function show(PreconDeck $precon): Response
+    public function show(PreconDeck $precon, #[CurrentUser] ?User $user, OwnershipChecker $ownership): Response
     {
         return $this->render('precon/show.html.twig', [
             'precon' => $precon,
+            'ownership' => $user ? $ownership->forPrecon($precon, $user) : null,
             'commanders' => $precon->getCardsIn(DeckZone::Commander),
             'main' => $precon->getCardsIn(DeckZone::Main),
         ]);

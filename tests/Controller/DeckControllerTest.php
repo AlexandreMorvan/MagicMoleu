@@ -46,6 +46,17 @@ class DeckControllerTest extends WebTestCase
         self::assertSame(100, $deck->countIn(DeckZone::Commander, DeckZone::Main));
     }
 
+    public function testDeckPageShowsWhatIsMissingFromMyCollections(): void
+    {
+        $deck = $this->persistDeck(public: true);
+        $this->client->loginUser($this->owner);
+
+        $this->client->request('GET', '/decks/'.$deck->getId());
+
+        self::assertSelectorTextContains('#ma-collection', '0 %');
+        self::assertSelectorTextContains('#ma-collection', 'Il te manque');
+    }
+
     public function testNewDeckRequiresLogin(): void
     {
         $this->client->request('GET', '/decks/nouveau');
