@@ -22,6 +22,7 @@
             {route: 'app_set_index', label: 'Éditions', active: ['app_set_index', 'app_set_show']},
             {route: 'app_deck_index', label: 'Decks', active: ['app_deck_index']},
             {route: 'app_spoilers', label: 'Spoilers', active: ['app_spoilers']},
+            {route: 'app_game', label: 'Partie', active: ['app_game']},
         ]|merge(app.user ? [
             {route: 'app_collection_index', label: 'Collection', active: ['app_collection_index', 'app_collection_show', 'app_collection_new', 'app_collection_settings']},
         ] : []) %}

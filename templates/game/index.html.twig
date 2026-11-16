@@ -1,0 +1,86 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Suivi de partie{% endblock %}
+
+{% block body %}
+    {% set accents = ['#8b5cf6', '#22d3ee', '#d946ef', '#2fa86a', '#f59e0b', '#3d8fd6'] %}
+    <div data-controller="game-tracker" data-game-tracker-arts-url-value="{{ path('app_game_arts') }}" class="game-tracker">
+        {# ---------- Configuration ---------- #}
+        <section data-game-tracker-target="setup" hidden>
+            <div class="game-hero">
+                <p class="font-display text-sm font-bold uppercase tracking-[0.3em] text-neon-cyan">Commander</p>
+                <h1 class="mt-1 text-4xl uppercase sm:text-5xl">Nouvelle partie</h1>
+                <p class="mt-2 max-w-2xl text-ink-300">Points de vie, dégâts de commandant, marqueurs et désignations. La partie reste sur cet appareil, même si tu fermes la page.</p>
+            </div>
+
+            <form class="mt-8 max-w-4xl" data-action="game-tracker#start:prevent">
+                <div class="panel grid gap-6 p-6 sm:grid-cols-[1fr_auto] sm:p-8">
+                    <fieldset>
+                        <legend class="label">Nombre de joueurs</legend>
+                        <div class="mt-1 flex flex-wrap gap-2" role="radiogroup">
+                            {% for n in 2..6 %}
+                                <label class="seat-choice">
+                                    <input type="radio" name="players" value="{{ n }}" class="sr-only" {{ n == 4 ? 'checked' }} data-game-tracker-target="playerCount" data-action="game-tracker#showPlayerRows">
+                                    <span>{{ n }}</span>
+                                </label>
+                            {% endfor %}
+                        </div>
+                    </fieldset>
+                    <div>
+                        <label class="label" for="game-life">Points de vie</label>
+                        <input id="game-life" type="number" min="1" max="999" value="40" class="input w-28 text-center font-display text-2xl font-bold" data-game-tracker-target="startingLife">
+                        <p class="mt-1 text-xs text-ink-500">20 en Duel Commander.</p>
+                    </div>
+                </div>
+
+                <ol class="mt-6 grid gap-4 md:grid-cols-2">
+                    {% for i in 0..5 %}
+                        {% set prefill = i == 0 ? first_player : {name: '', commanders: []} %}
+                        <li class="seat-card" style="--accent: {{ accents[i] }}" data-game-tracker-target="playerRow">
+                            <p class="flex items-center gap-2 font-display text-sm font-bold uppercase tracking-widest text-white">
+                                <span class="h-3 w-3 rounded-full bg-[var(--accent)] shadow-[0_0_12px_var(--accent)]"></span>Joueur {{ i + 1 }}
+                            </p>
+                            <div class="mt-3 space-y-2">
+                                <input type="text" class="input" placeholder="Pseudo" aria-label="Pseudo du joueur {{ i + 1 }}" maxlength="30" value="{{ prefill.name }}" data-field="name">
+                                <div class="grid gap-2 sm:grid-cols-2">
+                                    <input type="text" class="input" placeholder="Commandant" aria-label="Commandant du joueur {{ i + 1 }}" maxlength="80" value="{{ prefill.commanders[0] ?? '' }}" data-field="commander">
+                                    <input type="text" class="input" placeholder="Partenaire (facultatif)" aria-label="Second commandant du joueur {{ i + 1 }}" maxlength="80" value="{{ prefill.commanders[1] ?? '' }}" data-field="partner">
+                                </div>
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ol>
+
+                <button type="submit" class="game-start mt-8">⚔ Commencer la partie</button>
+            </form>
+        </section>
+
+        {# ---------- Partie : plateau plein écran, joueurs d'en face retournés ---------- #}
+        <section class="game-table" data-game-tracker-target="board" hidden>
+            {# Places calculées par le contrôleur selon l'orientation de l'écran (voir layout()) #}
+            <div class="seats" data-game-tracker-target="seats"></div>
+
+            <button type="button" class="table-menu-button" data-action="game-tracker#openMenu" aria-label="Menu de la partie" data-game-tracker-target="menuButton">
+                <span class="table-menu-round" data-game-tracker-target="roundBadge">1</span>
+            </button>
+            <p class="table-winner hidden" data-game-tracker-target="winner" role="status"></p>
+
+            <div class="table-menu-backdrop" data-game-tracker-target="menu" data-action="click->game-tracker#closeMenu" hidden>
+                <div class="table-menu" role="dialog" aria-modal="true" aria-labelledby="table-menu-title" data-action="click->game-tracker#keepMenuOpen">
+                    <p class="font-display text-xs font-bold uppercase tracking-[0.3em] text-neon-cyan" id="table-menu-title">Partie de Commander</p>
+                    <p class="mt-1 font-display text-2xl font-bold uppercase text-white" data-game-tracker-target="turnInfo" aria-live="polite"></p>
+                    <div class="mt-5 grid grid-cols-2 gap-2">
+                        <button type="button" class="menu-action menu-action-primary col-span-2" data-action="game-tracker#nextTurn">Tour suivant ➜</button>
+                        <button type="button" class="menu-action" data-action="game-tracker#undo" data-game-tracker-target="undoButton">↶ Annuler</button>
+                        <button type="button" class="menu-action" data-action="game-tracker#dayNight" data-game-tracker-target="dayNightButton">☀/☾ Jour ou nuit</button>
+                        <button type="button" class="menu-action" data-action="game-tracker#toggleFacing" data-game-tracker-target="facingButton">⇅ Face à face</button>
+                        <button type="button" class="menu-action" data-action="game-tracker#fullscreen">⛶ Plein écran</button>
+                        <button type="button" class="menu-action menu-action-danger" data-action="game-tracker#reset">Nouvelle partie</button>
+                        <a href="{{ path('app_home') }}" class="menu-action">Quitter</a>
+                    </div>
+                    <button type="button" class="mt-4 w-full text-center text-sm font-semibold text-ink-300 hover:text-white" data-action="game-tracker#closeMenu">Reprendre la partie</button>
+                </div>
+            </div>
+        </section>
+    </div>
+{% endblock %}

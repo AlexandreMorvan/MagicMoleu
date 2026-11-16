@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Combo\ComboCardLinker;
 use App\Combo\CommanderSpellbook;
 use App\Combo\ComboSourceUnavailableException;
 use App\Entity\CardLegality;
@@ -10,7 +11,6 @@ use App\Entity\OracleCard;
 use App\Enum\Format;
 use App\Repository\CardPrintingRepository;
 use App\Repository\MtgSetRepository;
-use App\Repository\OracleCardRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -99,7 +99,7 @@ class CardController extends AbstractController
         OracleCard $card,
         Request $request,
         CommanderSpellbook $spellbook,
-        OracleCardRepository $oracleCards,
+        ComboCardLinker $linker,
         #[Target('combos')]
         RateLimiterFactoryInterface $combosLimiter,
     ): Response {
@@ -114,26 +114,11 @@ class CardController extends AbstractController
             $combos = null;
         }
 
-        // Les cartes des combos présentes en base ouvrent leur fiche dans la modale et affichent leur nom français
-        $localCards = [];
-        if ($combos) {
-            $ids = [];
-            foreach ($combos->combos as $combo) {
-                foreach ($combo->cards as $comboCard) {
-                    if ($comboCard->oracleId) {
-                        $ids[$comboCard->oracleId->toRfc4122()] = $comboCard->oracleId;
-                    }
-                }
-            }
-            foreach ($ids ? $oracleCards->findBy(['id' => array_values($ids)]) : [] as $localCard) {
-                $localCards[$localCard->getId()->toRfc4122()] = $localCard;
-            }
-        }
-
         return $this->render('card/combos.html.twig', [
             'card' => $card,
             'combos' => $combos,
-            'local_cards' => $localCards,
+            // Les cartes des combos présentes en base ouvrent leur fiche dans la modale et affichent leur nom français
+            'local_cards' => $combos ? $linker->link($combos->combos) : [],
         ], new Response(status: null === $combos ? Response::HTTP_SERVICE_UNAVAILABLE : Response::HTTP_OK));
     }
 }

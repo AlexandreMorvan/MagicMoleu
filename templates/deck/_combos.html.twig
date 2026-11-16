@@ -1,0 +1,43 @@
+{# Combos d'un deck, rendus dans la frame « deck-combos » de la fiche. Variables : deck, combos (null si indisponible), local_cards #}
+{% set shown = 5 %}
+<turbo-frame id="deck-combos">
+    <section class="mt-8" id="combos">
+        <h2 class="text-xl uppercase text-ink-300">Combos</h2>
+        {% if combos is null %}
+            <p class="panel mt-4 p-5 text-sm text-ink-300">Commander Spellbook est momentanément indisponible, les combos n'ont pas pu être cherchés.</p>
+        {% elseif combos.included is empty and combos.almostIncluded is empty %}
+            <p class="panel mt-4 p-5 text-sm text-ink-300">Aucun combo connu dans ce deck, même à une carte près.</p>
+        {% else %}
+            <p class="mt-1 text-sm text-ink-500">Clique sur un combo pour voir les cartes et son déroulé.</p>
+            {% for section in [
+                {key: 'dans-le-deck', title: 'Dans le deck', class: 'text-mana-g', list: combos.included, total: combos.included|length, almost: false},
+                {key: 'a-une-carte-pres', title: 'À une carte près', class: 'text-amber-300', list: combos.almostIncluded, total: combos.almostIncludedTotal, almost: true},
+            ] %}
+                {% if section.list is not empty %}
+                    <h3 class="mt-6 font-sans text-sm font-semibold uppercase tracking-widest {{ section.class }}" id="combos-{{ section.key }}">
+                        {{ section.title }} ({{ section.total }})
+                    </h3>
+                    <ul class="mt-3 space-y-2">
+                        {% for combo in section.list|slice(0, shown) %}
+                            {{ include('deck/_combo_row.html.twig', {missing: section.almost ? combos.missingCards(combo) : []}) }}
+                        {% endfor %}
+                    </ul>
+                    {% if section.list|length > shown %}
+                        <details class="mt-2">
+                            <summary class="cursor-pointer text-sm font-semibold text-neon-cyan hover:underline">Voir les {{ section.list|length - shown }} autres</summary>
+                            <ul class="mt-2 space-y-2">
+                                {% for combo in section.list|slice(shown) %}
+                                    {{ include('deck/_combo_row.html.twig', {missing: section.almost ? combos.missingCards(combo) : []}) }}
+                                {% endfor %}
+                            </ul>
+                        </details>
+                    {% endif %}
+                    {% if section.total > section.list|length %}
+                        <p class="mt-2 text-xs text-ink-500">Seuls les {{ section.list|length }} plus joués sont affichés.</p>
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+            <p class="mt-4 text-xs text-ink-500">D'après Commander Spellbook.</p>
+        {% endif %}
+    </section>
+</turbo-frame>

@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\PreconDeck;
+use App\Entity\PreconDeckCard;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -58,6 +59,41 @@ class PreconDeckRepository extends ServiceEntityRepository
         rsort($years);
 
         return $years;
+    }
+
+    /**
+     * Lignes de plusieurs decks, sans hydrater les entités : pour calculer la part possédée de chaque vignette.
+     *
+     * @param list<int> $deckIds
+     *
+     * @return array<int, list<array{card: string, quantity: int, basic: bool}>>
+     */
+    public function findCardLines(array $deckIds): array
+    {
+        if (!$deckIds) {
+            return [];
+        }
+
+        $rows = $this->getEntityManager()->createQueryBuilder()
+            ->select('IDENTITY(c.deck) AS deck', 'o.id AS card', 'c.quantity', 'o.typeLine')
+            ->from(PreconDeckCard::class, 'c')
+            ->join('c.oracleCard', 'o')
+            ->where('c.deck IN (:ids)')
+            ->setParameter('ids', $deckIds)
+            ->getQuery()
+            ->getResult();
+
+        $lines = array_fill_keys($deckIds, []);
+        foreach ($rows as $row) {
+            $front = explode(' // ', $row['typeLine'])[0];
+            $lines[(int) $row['deck']][] = [
+                'card' => $row['card']->toRfc4122(),
+                'quantity' => (int) $row['quantity'],
+                'basic' => str_contains($front, 'Basic') && str_contains($front, 'Land'),
+            ];
+        }
+
+        return $lines;
     }
 
     /**

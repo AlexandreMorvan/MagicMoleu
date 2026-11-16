@@ -2,7 +2,9 @@
 
 namespace App\Combo;
 
+use App\Entity\Deck;
 use App\Entity\OracleCard;
+use App\Enum\DeckZone;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Target;
 use Symfony\Component\Uid\Uuid;
@@ -20,6 +22,7 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 class CommanderSpellbook
 {
     public const int LIMIT = 50;
+    public const int ALMOST_LIMIT = 15;
     private const int CACHE_TTL = 86400;
 
     public function __construct(
@@ -39,6 +42,57 @@ class CommanderSpellbook
             $item->expiresAfter(self::CACHE_TTL);
 
             return $this->fetch($card->getName());
+        });
+    }
+
+    /**
+     * Combos contenus dans un deck (commandant, deck principal et réserve), et ceux à une carte près.
+     *
+     * @throws ComboSourceUnavailableException
+     */
+    public function findDeckCombos(Deck $deck): DeckCombos
+    {
+        $commanders = $main = [];
+        foreach ($deck->getCardsIn(DeckZone::Commander, DeckZone::Main, DeckZone::Side) as $line) {
+            $entry = ['card' => $line->getOracleCard()->getName(), 'quantity' => $line->getQuantity()];
+            if (DeckZone::Commander === $line->getZone()) {
+                $commanders[] = $entry;
+            } else {
+                $main[] = $entry;
+            }
+        }
+        $names = array_values(array_unique(array_column([...$commanders, ...$main], 'card')));
+        if (!$names) {
+            return new DeckCombos([], [], 0, []);
+        }
+
+        // Clé de cache : la liste triée, indépendante de l'ordre et du deck (deux decks identiques partagent la réponse)
+        $key = [$commanders, $main];
+        array_walk($key, static fn (array &$list) => usort($list, static fn (array $a, array $b) => $a['card'] <=> $b['card']));
+
+        return $this->cache->get('deck-combos.'.hash('xxh128', serialize($key)), function (ItemInterface $item) use ($commanders, $main, $names): DeckCombos {
+            $item->expiresAfter(self::CACHE_TTL);
+
+            try {
+                $data = $this->client->request('POST', '/find-my-combos', ['json' => ['commanders' => $commanders, 'main' => $main]])->toArray();
+            } catch (ExceptionInterface $e) {
+                $this->logger->warning('Commander Spellbook indisponible : {message}', ['message' => $e->getMessage(), 'exception' => $e]);
+
+                throw new ComboSourceUnavailableException('Commander Spellbook est indisponible.', previous: $e);
+            }
+
+            $results = $data['results'] ?? null;
+            if (!\is_array($results) || !\is_array($results['included'] ?? null)) {
+                throw new ComboSourceUnavailableException('Réponse inattendue de Commander Spellbook.');
+            }
+
+            $byPopularity = static fn (Combo $a, Combo $b) => $b->popularity <=> $a->popularity;
+            $included = array_map($this->mapCombo(...), $results['included']);
+            usort($included, $byPopularity);
+            $almost = array_map($this->mapCombo(...), $results['almostIncluded'] ?? []);
+            usort($almost, $byPopularity);
+
+            return new DeckCombos($included, \array_slice($almost, 0, self::ALMOST_LIMIT), \count($almost), $names);
         });
     }
 

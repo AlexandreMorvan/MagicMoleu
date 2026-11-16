@@ -8,6 +8,7 @@ use App\Entity\OracleCard;
 use App\Entity\User;
 use SortDirection;
 use Symfony\Bridge\Doctrine\Types\UuidType;
+use Symfony\Component\Uid\Uuid;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -65,6 +66,40 @@ class CardCollectionRepository extends ServiceEntityRepository
     public function findByOwner(User $owner): array
     {
         return $this->findBy(['owner' => $owner], ['updatedAt' => 'DESC']);
+    }
+
+    /**
+     * Nombre d'exemplaires possédés par carte (toutes collections et impressions confondues).
+     *
+     * @return array<string, int> identifiant de la carte oracle (RFC 4122) => quantité
+     */
+    public function countOwnedByCard(User $owner): array
+    {
+        $rows = $this->getEntityManager()->createQueryBuilder()
+            ->select('IDENTITY(p.oracleCard) AS card', 'SUM(cc.quantity) AS quantity')
+            ->from(CollectionCard::class, 'cc')
+            ->join('cc.printing', 'p')
+            ->join('cc.collection', 'c')
+            ->where('c.owner = :owner')
+            ->setParameter('owner', $owner)
+            ->groupBy('p.oracleCard')
+            ->getQuery()
+            ->getScalarResult();
+
+        $owned = [];
+        foreach ($rows as $row) {
+            $owned[self::uuid($row['card'])] = (int) $row['quantity'];
+        }
+
+        return $owned;
+    }
+
+    /**
+     * IDENTITY() renvoie la valeur brute de la colonne BINARY(16).
+     */
+    private static function uuid(string $value): string
+    {
+        return (16 === \strlen($value) ? Uuid::fromBinary($value) : Uuid::fromString($value))->toRfc4122();
     }
 
     /**

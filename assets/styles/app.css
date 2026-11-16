@@ -250,3 +250,320 @@
         transform: none;
     }
 }
+
+/* ---------- Suivi de partie ---------- */
+@layer components {
+    /* Configuration */
+    .game-hero {
+        @apply relative overflow-hidden rounded-2xl border border-ink-800 p-6 sm:p-8;
+        background: radial-gradient(120% 140% at 0% 0%, rgb(139 92 246 / 0.25), transparent 55%),
+                    radial-gradient(120% 140% at 100% 100%, rgb(34 211 238 / 0.18), transparent 55%),
+                    var(--color-ink-900);
+    }
+
+    .seat-choice span {
+        @apply grid h-12 w-12 cursor-pointer place-items-center rounded-xl border border-ink-700 bg-ink-900 font-display text-xl font-bold text-ink-300 transition hover:border-neon-violet/60 hover:text-white;
+    }
+
+    .seat-choice input:checked + span {
+        @apply border-neon-violet bg-neon-violet/25 text-white shadow-glow;
+    }
+
+    .seat-choice input:focus-visible + span {
+        @apply outline-2 outline-offset-2 outline-neon-cyan;
+    }
+
+    .seat-card {
+        @apply relative overflow-hidden rounded-2xl border border-ink-800 bg-ink-900/80 p-4 pl-5;
+        &::before {
+            content: '';
+            @apply absolute inset-y-0 left-0 w-1 bg-[var(--accent)];
+            box-shadow: 0 0 16px var(--accent);
+        }
+    }
+
+    .game-start {
+        @apply w-full rounded-2xl px-6 py-4 font-display text-xl font-bold uppercase tracking-[0.2em] text-white transition sm:w-auto sm:px-12 disabled:opacity-60;
+        background: linear-gradient(135deg, var(--color-neon-violet), var(--color-neon-fuchsia) 55%, var(--color-neon-cyan));
+        box-shadow: 0 10px 30px -10px rgb(139 92 246 / 0.8);
+        &:hover { filter: brightness(1.12); transform: translateY(-1px); }
+        &:active { transform: translateY(1px); }
+    }
+
+    /* Plateau plein écran (au-dessus de l'en-tête du site) */
+    html.game-table-open, html.game-table-open body {
+        overflow: hidden;
+    }
+
+    .game-table {
+        @apply fixed inset-0 z-[60] flex flex-col gap-1.5 bg-[#05060a] p-1.5 select-none;
+        padding: max(0.375rem, env(safe-area-inset-top)) max(0.375rem, env(safe-area-inset-right)) max(0.375rem, env(safe-area-inset-bottom)) max(0.375rem, env(safe-area-inset-left));
+    }
+
+    .seats {
+        @apply grid min-h-0 flex-1 gap-1.5;
+    }
+
+    /* La tuile sert de conteneur : tailles en cqw/cqh/cqmin, quelle que soit sa rotation */
+    .tile {
+        @apply relative min-h-0 min-w-0 overflow-hidden rounded-[1.25rem] bg-ink-900;
+        container-type: size;
+        box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06);
+        transition: box-shadow 0.3s, filter 0.4s, opacity 0.4s;
+    }
+
+    /* Contenu tourné vers le joueur (« rotate » et « translate » plutôt que « transform », libre pour la secousse) */
+    .tile-body {
+        @apply absolute inset-0;
+    }
+
+    .tile[data-rotation="180"] .tile-body {
+        rotate: 180deg;
+    }
+
+    /* Joueur assis sur un côté : le contenu prend la hauteur de la tuile comme largeur, puis tourne d'un quart */
+    .tile[data-rotation="90"] .tile-body,
+    .tile[data-rotation="270"] .tile-body {
+        inset: auto;
+        top: 50%;
+        left: 50%;
+        width: 100cqh;
+        height: 100cqw;
+        translate: -50% -50%;
+    }
+
+    .tile[data-rotation="90"] .tile-body { rotate: 90deg; }
+    .tile[data-rotation="270"] .tile-body { rotate: -90deg; }
+
+    .tile-art {
+        @apply pointer-events-none absolute inset-0 h-full w-full object-cover;
+    }
+
+    .tile-shade {
+        @apply pointer-events-none absolute inset-0 transition duration-500;
+        background:
+            radial-gradient(ellipse 70% 60% at 50% 50%, rgb(5 6 10 / 0.55), rgb(5 6 10 / 0.2) 70%),
+            linear-gradient(0deg, color-mix(in srgb, var(--accent) 35%, transparent), transparent 45%),
+            linear-gradient(180deg, rgb(5 6 10 / 0.55), transparent 35%);
+    }
+
+    .tile-zone {
+        @apply absolute inset-y-0 z-10 flex w-1/2 touch-manipulation items-center bg-transparent px-3 transition-colors outline-none focus-visible:bg-white/5 active:bg-white/10;
+    }
+
+    .tile-zone-minus { @apply left-0 justify-start; }
+    .tile-zone-plus { @apply right-0 justify-end; }
+
+    .tile-zone-sign {
+        @apply grid h-10 w-10 place-items-center rounded-full bg-black/45 font-display text-2xl leading-none font-bold text-white/85 ring-1 ring-white/15 backdrop-blur-sm;
+    }
+
+    .tile-zone-minus .tile-zone-sign { @apply text-red-300; }
+    .tile-zone-plus .tile-zone-sign { @apply text-emerald-300; }
+
+    .tile-center {
+        @apply pointer-events-none absolute inset-0 z-20 flex flex-col items-center justify-center text-center;
+    }
+
+    .tile-name {
+        @apply max-w-[70%] truncate font-display text-base font-bold tracking-[0.2em] text-white/90 uppercase sm:text-lg;
+        text-shadow: 0 2px 8px rgb(0 0 0 / 0.9);
+    }
+
+    .tile-life {
+        @apply block font-display leading-[0.85] font-bold tabular-nums text-white;
+        font-size: clamp(3rem, 40cqmin, 12rem);
+        text-shadow: 0 4px 24px rgb(0 0 0 / 0.85), 0 0 40px color-mix(in srgb, var(--accent) 55%, transparent);
+    }
+
+    /* Sous le total, sans prendre de place : la tuile garde la même mise en page */
+    .tile-delta {
+        @apply absolute top-full left-1/2 -translate-x-1/2 font-display text-2xl leading-none font-bold whitespace-nowrap text-red-300 opacity-0 transition-opacity duration-300;
+        font-size: clamp(1.25rem, 12cqmin, 2.25rem);
+        text-shadow: 0 2px 8px rgb(0 0 0 / 0.9);
+    }
+
+    .tile-delta-gain { @apply text-emerald-300; }
+    .tile-delta-visible { @apply opacity-100; }
+
+    .tile-status {
+        @apply absolute top-3 left-1/2 z-20 max-w-[70%] -translate-x-1/2 truncate rounded-full bg-black/70 px-3 py-1 text-[0.65rem] font-bold tracking-widest text-red-300 uppercase ring-1 ring-red-400/50;
+    }
+
+    .tile-badges {
+        @apply pointer-events-none absolute inset-x-0 bottom-3.5 z-20 flex flex-wrap justify-center gap-1 px-24;
+    }
+
+    .tile-icon {
+        @apply absolute bottom-2.5 z-30 flex h-10 min-w-10 items-center justify-center gap-1.5 rounded-full bg-black/55 px-3 text-sm font-bold text-white ring-1 ring-white/15 backdrop-blur-sm transition hover:bg-black/75 active:scale-95;
+    }
+
+    .tile-icon-left { @apply left-2.5; }
+    .tile-icon-right { @apply right-2.5; }
+    .tile-icon-glyph { @apply text-base text-[var(--accent)]; }
+    .tile-icon-value:empty { @apply hidden; }
+
+    .tile-icon-danger {
+        @apply text-red-300 ring-red-400/70;
+        box-shadow: 0 0 14px -2px rgb(229 72 77 / 0.8);
+    }
+
+    .tile-sheet {
+        @apply @container absolute inset-0 z-40 overflow-y-auto bg-ink-950/95 p-3 backdrop-blur-md select-text sm:p-4;
+    }
+
+    .tile-sheet-close {
+        @apply grid h-9 w-9 shrink-0 place-items-center rounded-full bg-ink-800 text-ink-100 transition hover:bg-ink-700 hover:text-white;
+    }
+
+    .tile-flash {
+        @apply pointer-events-none absolute inset-0 z-30 opacity-0;
+        background: radial-gradient(circle at 50% 50%, rgb(255 70 70 / 0.95), rgb(229 72 77 / 0.45) 55%, rgb(229 72 77 / 0.15));
+    }
+
+    .player-active {
+        box-shadow: inset 0 0 0 3px var(--accent), 0 0 28px -6px var(--accent);
+    }
+
+    .player-out {
+        @apply opacity-60 grayscale;
+    }
+
+    /* Menu central */
+    .table-menu-button {
+        @apply fixed top-1/2 left-1/2 z-[65] grid h-14 w-14 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full text-white transition active:scale-95;
+        background: linear-gradient(135deg, var(--color-neon-violet), var(--color-neon-fuchsia));
+        box-shadow: 0 0 0 5px #05060a, 0 0 24px rgb(217 70 239 / 0.7);
+        &[data-day-night="day"] { background: linear-gradient(135deg, #fbbf24, #f97316); box-shadow: 0 0 0 5px #05060a, 0 0 24px rgb(251 191 36 / 0.7); }
+        &[data-day-night="night"] { background: linear-gradient(135deg, #312e81, #6366f1); box-shadow: 0 0 0 5px #05060a, 0 0 24px rgb(99 102 241 / 0.7); }
+    }
+
+    .table-menu-round {
+        @apply font-display text-xl font-bold;
+    }
+
+    .table-winner {
+        @apply fixed top-[calc(50%+2.75rem)] left-1/2 z-[65] -translate-x-1/2 rounded-full px-5 py-2 font-display text-lg font-bold tracking-widest whitespace-nowrap text-white uppercase;
+        background: linear-gradient(135deg, #2fa86a, #22d3ee);
+        box-shadow: 0 0 0 4px #05060a, 0 0 30px rgb(47 168 106 / 0.8);
+    }
+
+    .table-menu-backdrop {
+        @apply fixed inset-0 z-[80] grid place-items-center bg-black/70 p-4 backdrop-blur-sm;
+    }
+
+    .table-menu {
+        @apply max-h-full w-full max-w-sm overflow-y-auto rounded-3xl border border-ink-700 bg-ink-900 p-5 text-center sm:p-6;
+        box-shadow: 0 30px 80px -20px rgb(139 92 246 / 0.5);
+    }
+
+    .menu-action {
+        @apply flex items-center justify-center gap-1.5 rounded-xl border border-ink-700 bg-ink-850 px-3 py-3 font-display text-sm font-bold tracking-wider text-ink-100 uppercase transition hover:border-neon-cyan/60 hover:text-white active:scale-95 disabled:pointer-events-none disabled:opacity-40;
+        &[aria-pressed="true"] { @apply border-neon-violet bg-neon-violet/20 text-white; }
+    }
+
+    .menu-action-primary {
+        @apply border-transparent py-4 text-base text-white;
+        background: linear-gradient(135deg, var(--color-neon-violet), var(--color-neon-fuchsia));
+    }
+
+    .menu-action-danger {
+        @apply hover:border-mana-r/70 hover:text-mana-r;
+    }
+
+    .stepper {
+        @apply flex items-center gap-2 rounded-lg bg-ink-900/80 px-2.5 py-1.5;
+        border-left: 3px solid var(--counter);
+    }
+
+    .stepper-icon {
+        @apply grid h-6 w-6 shrink-0 place-items-center rounded-full text-xs;
+        color: var(--counter);
+        background: color-mix(in srgb, var(--counter) 18%, transparent);
+    }
+
+    .step-button {
+        @apply grid h-8 w-8 shrink-0 touch-manipulation place-items-center rounded-full border border-ink-700 bg-ink-850 text-lg leading-none font-bold text-ink-100 transition select-none hover:text-white active:scale-90;
+        &:hover { border-color: var(--counter); box-shadow: 0 0 12px -4px var(--counter); }
+    }
+
+    .counter-value {
+        @apply w-10 text-center font-display text-xl font-bold tabular-nums text-white;
+    }
+
+    .counter-zero {
+        @apply text-ink-500;
+    }
+
+    .counter-danger {
+        @apply text-amber-300;
+    }
+
+    .counter-lethal {
+        @apply text-mana-r;
+    }
+
+    .counter-chip {
+        @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold;
+        color: var(--counter);
+        background: color-mix(in srgb, var(--counter) 14%, transparent);
+        box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--counter) 45%, transparent);
+    }
+
+    .counter-chip-danger {
+        @apply text-mana-r;
+        box-shadow: inset 0 0 0 1px rgb(229 72 77 / 0.7), 0 0 12px -4px rgb(229 72 77);
+    }
+
+    .toggle-button {
+        @apply rounded-full border border-ink-700 bg-ink-900 px-3 py-1.5 text-xs font-semibold text-ink-300 transition select-none hover:text-white;
+    }
+
+    .toggle-button[aria-pressed="true"] {
+        @apply border-amber-300/70 bg-amber-300/15 text-amber-200;
+        box-shadow: 0 0 14px -4px rgb(252 211 77 / 0.8);
+    }
+
+    .designation-badge {
+        @apply rounded-full px-2 py-0.5 text-[0.65rem] font-bold uppercase tracking-wider;
+    }
+
+    .designation-turn { @apply bg-[var(--accent)] text-ink-950; }
+    .designation-monarch { @apply bg-amber-300/20 text-amber-200 ring-1 ring-amber-300/60; }
+    .designation-initiative { @apply bg-neon-cyan/15 text-neon-cyan ring-1 ring-neon-cyan/60; }
+    .designation-blessing { @apply bg-neon-violet/20 text-violet-200 ring-1 ring-neon-violet/60; }
+
+    /* Moins de 10 points de vie : voile rouge, total rouge qui bat, lueur pulsante */
+    .player-low .tile-shade {
+        background:
+            radial-gradient(ellipse 75% 65% at 50% 50%, rgb(60 0 0 / 0.55), rgb(229 72 77 / 0.35) 80%),
+            linear-gradient(0deg, rgb(229 72 77 / 0.55), transparent 55%);
+    }
+
+    .player-low {
+        animation: low-life-glow 1.4s ease-in-out infinite;
+    }
+
+    .player-low .tile-life {
+        @apply text-red-400;
+        text-shadow: 0 4px 24px rgb(0 0 0 / 0.85), 0 0 36px rgb(229 72 77 / 0.95);
+        animation: low-life-beat 1.4s ease-in-out infinite;
+    }
+
+    /* Sans animation, l'alerte reste bien visible : lueur rouge fixe */
+    @media (prefers-reduced-motion: reduce) {
+        .player-low { animation: none; box-shadow: inset 0 0 0 3px rgb(229 72 77 / 0.95), 0 0 32px -4px rgb(229 72 77 / 0.8); }
+        .player-low .tile-life { animation: none; }
+    }
+}
+
+@keyframes low-life-glow {
+    0%, 100% { box-shadow: inset 0 0 0 2px rgb(229 72 77 / 0.55), inset 0 0 30px rgb(229 72 77 / 0.2); }
+    50% { box-shadow: inset 0 0 0 4px rgb(229 72 77 / 1), inset 0 0 70px rgb(229 72 77 / 0.55); }
+}
+
+@keyframes low-life-beat {
+    0%, 40%, 100% { transform: scale(1); }
+    15% { transform: scale(1.12); }
+    28% { transform: scale(1.04); }
+}

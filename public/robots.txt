@@ -7,3 +7,4 @@ Disallow: /notifications
 Disallow: /mot-de-passe-oublie
 Disallow: /cartes/*/combos
 Disallow: /_components/
+Disallow: /partie/illustrations

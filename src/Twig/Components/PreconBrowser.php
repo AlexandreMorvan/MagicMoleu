@@ -2,8 +2,11 @@
 
 namespace App\Twig\Components;
 
+use App\Collection\OwnershipChecker;
 use App\Entity\PreconDeck;
+use App\Entity\User;
 use App\Repository\PreconDeckRepository;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveAction;
 use Symfony\UX\LiveComponent\Attribute\LiveProp;
@@ -32,8 +35,32 @@ class PreconBrowser
     /** @var list<PreconDeck>|null */
     private ?array $decks = null;
 
-    public function __construct(private readonly PreconDeckRepository $repository)
+    /** @var array<int, int>|null */
+    private ?array $percentages = null;
+
+    public function __construct(
+        private readonly PreconDeckRepository $repository,
+        private readonly OwnershipChecker $ownership,
+        private readonly Security $security,
+    ) {
+    }
+
+    /**
+     * Part de chaque deck affiché déjà possédée par l'utilisateur connecté (vide si personne n'est connecté).
+     *
+     * @return array<int, int> identifiant du deck => pourcentage
+     */
+    public function getOwnedPercentages(): array
     {
+        $user = $this->security->getUser();
+        if (!$user instanceof User) {
+            return [];
+        }
+
+        return $this->percentages ??= $this->ownership->percentages(
+            $this->repository->findCardLines(array_map(static fn (PreconDeck $d) => (int) $d->getId(), $this->getDecks())),
+            $user,
+        );
     }
 
     public function resetPage(): void
