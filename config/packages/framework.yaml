@@ -5,6 +5,12 @@ framework:
     # Note that the session will be started ONLY if you read or write from it.
     session: true
 
+    # Hôtes acceptés (regex) : empêche de forger les liens absolus des emails avec un faux en-tête Host
+    trusted_hosts: '%env(TRUSTED_HOSTS)%'
+    # Proxy ou répartiteur de charge devant l'application (ex. AWS ALB) : IP ou plage dans SYMFONY_TRUSTED_PROXIES,
+    # pour que l'IP du visiteur (limites de débit) et le HTTPS soient bien reconnus
+    trusted_headers: ['x-forwarded-for', 'x-forwarded-proto', 'x-forwarded-port', 'x-forwarded-host']
+
     #esi: true
     #fragments: true
 

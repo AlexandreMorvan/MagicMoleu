@@ -43,6 +43,15 @@ class RegistrationFormType extends AbstractType
                     new Assert\Length(min: 8, max: 4096, minMessage: 'Ton mot de passe doit faire au moins {{ limit }} caractères.'),
                 ],
             ])
+            // Champ piège, invisible pour les humains : un robot qui remplit tous les champs se trahit.
+            // Placé après les mots de passe : les navigateurs remplissent le champ texte qui les précède (identifiant).
+            // Vérifié seulement à l'envoi (RegistrationForm::save), jamais pendant la saisie.
+            ->add('website', TextType::class, [
+                'mapped' => false,
+                'required' => false,
+                'label' => 'Site web (laisser vide)',
+                'attr' => ['autocomplete' => 'off', 'tabindex' => '-1'],
+            ])
         ;
     }
 

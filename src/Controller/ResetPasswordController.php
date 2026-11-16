@@ -10,11 +10,14 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\DependencyInjection\Attribute\Target;
+use Symfony\Component\Form\FormError;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use SymfonyCasts\Bundle\ResetPassword\Controller\ResetPasswordControllerTrait;
 use SymfonyCasts\Bundle\ResetPassword\Exception\ResetPasswordExceptionInterface;
@@ -35,9 +38,20 @@ class ResetPasswordController extends AbstractController
     }
 
     #[Route('', name: 'app_forgot_password', methods: ['GET', 'POST'])]
-    public function request(Request $request, UserRepository $users, MailerInterface $mailer, #[Autowire('%env(MAILER_FROM)%')] string $from): Response
-    {
+    public function request(
+        Request $request,
+        UserRepository $users,
+        MailerInterface $mailer,
+        #[Autowire('%env(MAILER_FROM)%')]
+        string $from,
+        #[Target('password_reset')]
+        RateLimiterFactoryInterface $passwordResetLimiter,
+    ): Response {
         $form = $this->createForm(ResetPasswordRequestFormType::class)->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid() && !$passwordResetLimiter->create($request->getClientIp())->consume()->isAccepted()) {
+            $form->addError(new FormError('Trop de demandes depuis ta connexion. Réessaie dans une heure.'));
+        }
 
         if ($form->isSubmitted() && $form->isValid()) {
             $user = $users->findOneBy(['email' => $form->get('email')->getData()]);

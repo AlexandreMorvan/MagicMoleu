@@ -5,3 +5,35 @@ framework:
             policy: token_bucket
             limit: 10
             rate: { interval: '1 second', amount: 10 }
+
+        # Protections anti-bots, par adresse IP (voir aussi login_throttling dans security.yaml)
+        registration:
+            policy: sliding_window
+            limit: 3
+            interval: '1 hour'
+        password_reset:
+            policy: sliding_window
+            limit: 5
+            interval: '1 hour'
+        # Chaque page de combos non encore en cache interroge Commander Spellbook
+        combos:
+            policy: sliding_window
+            limit: 30
+            interval: '1 minute'
+
+when@test:
+    framework:
+        rate_limiter:
+            # Stockage en mémoire, neuf pour chaque test (nouveau noyau) mais conservé d'une requête à l'autre
+            registration:
+                cache_pool: app.test.rate_limiter_storage
+            password_reset:
+                cache_pool: app.test.rate_limiter_storage
+            combos:
+                cache_pool: app.test.rate_limiter_storage
+
+    services:
+        # Pas un pool de cache déclaré : ceux-ci sont vidés entre deux requêtes par le « services resetter »
+        app.test.rate_limiter_storage:
+            class: Symfony\Component\Cache\Adapter\ArrayAdapter
+            autoconfigure: false

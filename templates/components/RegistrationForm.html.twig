@@ -1,11 +1,14 @@
 <div {{ attributes }}>
     {{ form_start(form, {attr: {'data-action': 'live#action:prevent', 'data-live-action-param': 'save', novalidate: 'novalidate'}}) }}
+        {% if error %}<p class="mb-5 rounded-lg border border-mana-r/40 bg-mana-r/10 px-3 py-2 text-sm text-mana-r" role="alert">{{ error }}</p>{% endif %}
         {{ form_row(form.username) }}
         {{ form_row(form.email) }}
         <div class="grid gap-x-4 sm:grid-cols-2">
             {{ form_row(form.plainPassword.first) }}
             {{ form_row(form.plainPassword.second) }}
         </div>
+        {# Champ piège pour les robots : masqué visuellement (pas display:none, que certains robots détectent) #}
+        <div class="sr-only" aria-hidden="true">{{ form_row(form.website) }}</div>
         {{ form_rest(form) }}
 
         <button type="submit" class="btn btn-primary mt-2 w-full" data-loading="addAttribute(disabled)">
