@@ -57,6 +57,7 @@ class AdminTest extends WebTestCase
 
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('body', 'Cartes uniques');
+        self::assertSelectorTextContains('body', 'LE GRENIER À MANA');
     }
 
     #[DataProvider('crudControllers')]

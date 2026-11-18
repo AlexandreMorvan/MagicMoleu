@@ -93,7 +93,7 @@ class AccountController extends AbstractController
     #[Route('/export', name: 'app_account_export', methods: ['GET'])]
     public function export(#[CurrentUser] User $user, AccountDataExporter $exporter): Response
     {
-        $filename = \sprintf('manaforge-%s-%s.json', (new AsciiSlugger())->slug((string) $user->getUsername())->lower(), date('Y-m-d'));
+        $filename = \sprintf('grenier-a-mana-%s-%s.json', (new AsciiSlugger())->slug((string) $user->getUsername())->lower(), date('Y-m-d'));
         $response = new JsonResponse($exporter->export($user));
         $response->setEncodingOptions(\JSON_PRETTY_PRINT | \JSON_UNESCAPED_UNICODE | \JSON_UNESCAPED_SLASHES);
         $response->headers->set('Content-Disposition', \sprintf('attachment; filename="%s"', $filename));

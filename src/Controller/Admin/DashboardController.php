@@ -18,6 +18,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Config\Assets;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Dashboard;
 use EasyCorp\Bundle\EasyAdminBundle\Config\MenuItem;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractDashboardController;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -30,6 +31,8 @@ class DashboardController extends AbstractDashboardController
         private readonly UserRepository $users,
         private readonly DeckRepository $decks,
         private readonly BulkDataDownloader $bulkData,
+        #[Autowire(param: 'app.site_name')]
+        private readonly string $siteName,
     ) {
     }
 
@@ -67,7 +70,7 @@ class DashboardController extends AbstractDashboardController
     public function configureDashboard(): Dashboard
     {
         return Dashboard::new()
-            ->setTitle('<span style="font-weight:700;letter-spacing:.15em">MANAFORGE</span> <small style="opacity:.6">admin</small>')
+            ->setTitle(\sprintf('<span style="font-weight:700;letter-spacing:.15em">%s</span> <small style="opacity:.6">admin</small>', htmlspecialchars(mb_strtoupper($this->siteName))))
             ->setDefaultColorScheme('dark')
             ->setLocales(['fr']);
     }
