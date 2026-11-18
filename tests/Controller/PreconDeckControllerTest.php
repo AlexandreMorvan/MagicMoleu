@@ -100,6 +100,26 @@ class PreconDeckControllerTest extends WebTestCase
         self::assertSelectorTextContains('main header', 'Connecte-toi pour l\'ajouter');
     }
 
+    public function testShowLoadsTheDeckInASingleQuery(): void
+    {
+        $codes = ['BreedLethality_C16', 'PartyTime_CLB'];
+        $ids = array_combine($codes, array_map(fn (string $code) => $this->precon($code)->getId(), $codes));
+        // Le kernel ne redémarre qu'à partir de la 2e requête : sans celle-ci, le profiler compterait aussi
+        // les requêtes de l'import du setUp, et l'identity map servirait les cartes sans requête
+        $this->client->request('GET', '/decks/preconstruits');
+
+        $counts = [];
+        foreach ($ids as $code => $id) {
+            $this->client->enableProfiler();
+            $this->client->request('GET', '/decks/preconstruits/'.$id);
+
+            self::assertResponseIsSuccessful();
+            $counts[$code] = $this->client->getProfile()->getCollector('db')->getQueryCount();
+        }
+
+        self::assertSame(['BreedLethality_C16' => 1, 'PartyTime_CLB' => 1], $counts, 'pas une requête par carte (N+1)');
+    }
+
     public function testShowsTheShareOfThePreconAlreadyOwned(): void
     {
         $user = $this->createUser();
