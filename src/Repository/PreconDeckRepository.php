@@ -48,6 +48,24 @@ class PreconDeckRepository extends ServiceEntityRepository
     }
 
     /**
+     * Un deck avec tout ce qu'affiche sa page (édition, cartes, impressions, noms français) en une seule requête.
+     */
+    public function findWithCards(int $id): ?PreconDeck
+    {
+        return $this->createQueryBuilder('d')
+            ->leftJoin('d.set', 's')->addSelect('s')
+            ->leftJoin('d.cards', 'c')->addSelect('c')
+            ->leftJoin('c.oracleCard', 'o')->addSelect('o')
+            ->leftJoin('c.printing', 'p')->addSelect('p')
+            ->leftJoin('o.localizations', 'l', 'WITH', 'l.lang = :lang')->addSelect('l')
+            ->where('d.id = :id')
+            ->setParameter('id', $id)
+            ->setParameter('lang', 'fr')
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    /**
      * Années de sortie des decks, de la plus récente à la plus ancienne.
      *
      * @return list<int>

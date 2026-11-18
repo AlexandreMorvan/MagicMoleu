@@ -9,6 +9,7 @@ use App\Entity\User;
 use App\Enum\DeckZone;
 use App\Precon\PreconDeckCopier;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -33,8 +34,11 @@ class PreconDeckController extends AbstractController
     }
 
     #[Route('/{id}', name: 'app_precon_show', requirements: ['id' => Requirement::DIGITS], methods: ['GET'])]
-    public function show(PreconDeck $precon, #[CurrentUser] ?User $user, OwnershipChecker $ownership): Response
-    {
+    public function show(
+        #[MapEntity(expr: 'repository.findWithCards(id)')] PreconDeck $precon,
+        #[CurrentUser] ?User $user,
+        OwnershipChecker $ownership,
+    ): Response {
         return $this->render('precon/show.html.twig', [
             'precon' => $precon,
             'ownership' => $user ? $ownership->forPrecon($precon, $user) : null,
