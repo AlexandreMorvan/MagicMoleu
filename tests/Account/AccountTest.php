@@ -202,7 +202,7 @@ class AccountTest extends WebTestCase
 
         self::assertResponseIsSuccessful();
         self::assertResponseHeaderSame('Content-Type', 'application/json');
-        self::assertStringContainsString('attachment; filename="manaforge-chandra-', (string) $this->client->getResponse()->headers->get('Content-Disposition'));
+        self::assertStringContainsString('attachment; filename="grenier-a-mana-chandra-', (string) $this->client->getResponse()->headers->get('Content-Disposition'));
         $data = json_decode((string) $this->client->getResponse()->getContent(), true, flags: \JSON_THROW_ON_ERROR);
         self::assertSame('Chandra', $data['account']['username']);
         self::assertSame('Burn', $data['decks'][0]['name']);
@@ -247,6 +247,8 @@ class AccountTest extends WebTestCase
         self::assertInstanceOf(Email::class, $email);
         self::assertEmailAddressContains($email, 'To', 'chandra@example.com');
         self::assertEmailHtmlBodyContains($email, 'Choisir un nouveau mot de passe');
+        self::assertEmailHtmlBodyContains($email, 'LE GRENIER À MANA');
+        self::assertEmailAddressContains($email, 'From', 'no-reply@grenieramana.local');
         preg_match('#https?://[^/]+(/mot-de-passe-oublie/reinitialiser/[^"]+)#', (string) $email->getHtmlBody(), $link);
 
         // Le jeton passe en session et disparaît de l'URL

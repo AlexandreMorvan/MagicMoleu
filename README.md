@@ -1,4 +1,4 @@
-# MagicMoleu
+# Le Grenier à Mana
 
 Site Magic: The Gathering : recherche de cartes, decks Standard / Commander avec vérification des ban lists, spoilers.
 Données issues de [Scryfall](https://scryfall.com/docs/api), stockées dans MariaDB.

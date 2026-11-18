@@ -2,7 +2,7 @@ twig:
     file_name_pattern: '*.twig'
     form_themes: ['form/tailwind_theme.html.twig']
     globals:
-        site_name: 'ManaForge'
+        site_name: '%app.site_name%'
         build_version: '%app.build_version%'
 
 when@test:

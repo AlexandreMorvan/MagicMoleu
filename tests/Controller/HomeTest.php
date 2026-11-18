@@ -22,6 +22,8 @@ class HomeTest extends WebTestCase
 
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('section.grid', '10');
+        self::assertPageTitleSame('Le Grenier à Mana');
+        self::assertSelectorTextContains('header nav', 'Le Grenier à Mana');
     }
 
     public function testQuickSearchFindsCardsByFrenchOrEnglishName(): void
